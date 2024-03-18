@@ -1,0 +1,39 @@
+[
+    {
+      "id": 1,
+      "name": "Travis Keller",
+      "email": "travis@godru.bh",
+      "mobile": "(769) 454-1519",
+      "type": "customer",
+      "Address": "123 Main St, Anytown, USA",
+      "GSTIN": "29ABCDE1234F1Z5"
+    },
+    {
+      "id": 2,
+      "name": "Amanda Johnson",
+      "email": "amanda@example.com",
+      "mobile": "(123) 456-7890",
+      "type": "customer",
+      "Address": "456 Elm St, Othertown, USA",
+      "GSTIN": "12XYZ7890A2B4C7"
+    },
+    {
+      "id": 3,
+      "name": "Michael Smith",
+      "email": "michael@example.com",
+      "mobile": "(987) 654-3210",
+      "type": "supplier",
+      "Address": "789 Oak St, Anycity, USA",
+      "GSTIN": "87MNO4567P3Q2R9"
+    },
+    {
+      "id": 4,
+      "name": "Emily Davis",
+      "email": "emily@example.com",
+      "mobile": "(555) 789-1234",
+      "type": "supplier",
+      "Address": "101 Pine St, Somewhere, USA",
+      "GSTIN": "65JKL3210D9E8F4"
+    }
+  ]
+  
