@@ -1,8 +1,11 @@
+const { where } = require("sequelize");
 const db = require("../models/index");
 
 const CustomerType = db.CustomerType;
 const Customer =  db.Customer;
 const Order = db.Order;
+const Transaction = db.Transaction;
+const ShippingPreference = db.ShippingPreferences;
 // --------------------------------------------------------customer types--------------------------------------------------------- 
 
 // POST req for customer Type
@@ -33,6 +36,19 @@ const getAllCustomerType = async (req, res) => {
   }
 };
 
+const getPreference = async (req, res) => {
+  
+
+  try {
+    const id = req.params.id;
+    const pref = await ShippingPreference.findOne({where:{customerId:id}, attributes:['id','LogisticName']});
+    res.status(200).send(pref);
+  } catch (error) {
+    console.error("Error getting all customer types:", error);
+    res.status(500).send("Error getting all customer types");
+  }
+}
+
 //------------------------------------------------------------ Customers----------------------------------------------------------
 
 // POST all the customers 
@@ -54,11 +70,91 @@ const addCustomer = async (req, res) => {
       status : true,
       typeid : 1,
     };
+    let logisticName = req.body.logisticName;
+
+    // Check if logisticName is provided
+    if (!logisticName) {
+      return res.status(400).send("LogisticName is required");
+    }
+
     const customer = await Customer.create(info);
+
+    let shipPref = {
+      LogisticName: logisticName,
+      customerId: customer.id
+    }
+    const pref = await ShippingPreference.create(shipPref);
+
     res.status(200).send(customer);
   } catch (error) {
     console.error("Error adding customer:", error);
     res.status(500).send("Error adding customer");
+  }
+};
+
+const getCustomer = async (req, res) => {
+  try {
+    let custId = req.params.id;
+    const customer = await Customer.findByPk(custId)
+    
+    const ship = await ShippingPreference.findOne({where : {customerId:custId}});
+    const logisticName = ship?.LogisticName || ''
+    const response = {...customer.dataValues, logisticName}
+    res.status(200).send(response);
+  } catch (error) {
+    console.error("Error adding customer:", error);
+    res.status(500).send("Error adding customer");
+  }
+};
+
+const updateCustomer = async (req, res) => {
+  try {
+    let custId = req.params.id;
+    const customer = await Customer.findByPk(custId);
+    if (!customer) {
+      return res.status(404).send("Customer not found");
+    }
+    
+    let info = {
+      id: req.body.id || customer.id,
+      firstname: req.body.firstname || customer.firstname,
+      lastname: req.body.lastname || customer.lastname,
+      gender: req.body.gender || customer.gender,
+      email: req.body.email || '',
+      contact: req.body.contact || customer.contact,
+      address1: req.body.address1 || customer.address1,
+      address2: req.body.address2 || customer.address2,
+      city: req.body.city || customer.city,
+      pincode: req.body.pincode || customer.pincode,
+      state: req.body.state || customer.state,
+      GSTIN: req.body.GSTIN || '',
+      status: true,
+      typeid: 1,
+    };
+    let logisticName = req.body.logisticName;
+    
+    // Update customer information
+    await customer.update(info);
+    
+    if (logisticName) {
+      // Update shipping preference if logisticName is provided
+      const ship = await ShippingPreference.findOne({ where: { customerId: custId } });
+      if (!ship) {
+        // return res.status(404).send("Shipping preference not found");
+        let shipPref = {
+          LogisticName: logisticName,
+          customerId: customer.id
+        }
+        const pref = await ShippingPreference.create(shipPref);
+      }else{
+        await ship.update({ LogisticName: logisticName });
+      }
+    }
+    
+    res.status(200).send(customer);
+  } catch (error) {
+    console.error("Error updating customer:", error);
+    res.status(500).send("Error updating customer");
   }
 };
 
@@ -73,10 +169,10 @@ const getRequiredDataCustomers = async (req, res) => {
       }
     });
 
-    // Check if any customers found
-    if (!customers || customers.length === 0) {
-      return res.status(404).send("No customers found");
-    }
+    // // Check if any customers found
+    // if (!customers || customers.length === 0) {
+    //   return res.status(404).send("No customers found");
+    // }
 
     // Map through each customer and extract required data
     const selectedData = customers.map(customer => {
@@ -116,8 +212,11 @@ const getRequiredDataCustomersById = async (req, res) => {
     // Find specific fields of transactions associated with the customer
     const transactions = await Order.findAll({
       where: { customerId: customerId },
-      attributes: ['id', 'BillNo', 'orderDate', 'TotalAmount', 'remark']
+      attributes: ['id', 'BillNo', 'orderDate', 'TotalAmount', 'remark'],
+      order: [['orderDate', 'DESC']]
     });
+
+    const payments = await  Transaction.findAll({where:{customerId :customerId}, attributes: ['id', 'remark', 'Amount','TransactionDate'], order: [['TransactionDate', 'DESC']]});
 
     const transformedTransactions = transactions.map(transaction => ({
       id: transaction.id,
@@ -134,6 +233,39 @@ const getRequiredDataCustomersById = async (req, res) => {
 
     // Extract required values from the customer object
     const { id, email, GSTIN } = customer;
+
+    // getting ledger
+
+    const orderList = await Order.findAll({
+      where: { customerId: customerId },
+      attributes: ["id"],
+    });
+    const orderIds = orderList.map((order) => order.id);
+    const trasactionCustList = await Transaction.findAll({
+      where: { customerId: customerId },
+    });
+
+    const mappedTransactions1 = trasactionCustList.map(transaction => ({
+      id: transaction.id,
+      remark: transaction.remark,
+      date: transaction.TransactionDate,
+      credit: parseFloat(transaction.Amount) > 0 ? parseFloat(transaction.Amount) : null,
+      debit: parseFloat(transaction.Amount) <= 0 ? parseFloat(transaction.Amount) * -1 : null
+  }));
+
+    const transactionOrderList = await Transaction.findAll({
+      where: { orderId: orderIds },
+    });
+
+    const mappedTransactions2 = transactionOrderList.map(transaction => ({
+      id: transaction.id,
+      remark: transaction.remark,
+      date: transaction.TransactionDate,
+      credit: parseFloat(transaction.Amount) <= 0 ? parseFloat(transaction.Amount) * -1 : null,
+      debit: parseFloat(transaction.Amount) > 0 ? parseFloat(transaction.Amount) : null,
+  }));
+
+    const resp = [...mappedTransactions1, ...mappedTransactions2]
     
     // Ensure all values are defined before sending in the response
     const responseData = {
@@ -144,7 +276,9 @@ const getRequiredDataCustomersById = async (req, res) => {
       type: cust,
       address,
       GSTIN,
-      transactions:transformedTransactions
+      transactions:transformedTransactions,
+      payments:payments,
+      ledger:resp
     };
 
     // Return the required values in the response
@@ -188,8 +322,11 @@ module.exports = {
   addCustomerType,
   getAllCustomerType,
   addCustomer,
+  getCustomer,
+  updateCustomer,
   getRequiredDataCustomers,
   deleteCustomer,
   getRequiredDataCustomersById,
+  getPreference
 };
   

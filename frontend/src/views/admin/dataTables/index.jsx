@@ -106,7 +106,7 @@ export default function Settings() {
 
   const handleAddCustomer = () => {
     history.push({
-      pathname: `/admin/data-tables/addCustomer`,
+      pathname: `/admin/customers/addCustomer`,
     });
   };
 
@@ -118,7 +118,7 @@ export default function Settings() {
     // console.log(CustomerDetailData);
 
     history.push({
-      pathname: `/admin/data-tables/profile/${custId}`,
+      pathname: `/admin/customers/profile/${custId}`,
       state: { id: custId },
     });
   };
@@ -163,9 +163,19 @@ export default function Settings() {
 
   const handleDelClick = (data) =>{
     setCustId(data.id);
-    // console.log(custId);
-
     setIsOpen(true);
+  }
+
+
+  const handleEditClick = (data)=>{
+    const custId = data.id;
+
+    history.push({
+      pathname: `/admin/customers/edit/${custId}`,
+      state: { id: custId },
+    });
+
+
   }
 
   const handleDeleteConfirmed = () => {
@@ -222,6 +232,7 @@ export default function Settings() {
         tableData={customerData}
         handleClick={handleViewButtonClick}
         handleDelClick={handleDelClick}
+        handleEditClick={handleEditClick}
       />
       {alert.message && (
         <Alert status={alert.type} mt="4">

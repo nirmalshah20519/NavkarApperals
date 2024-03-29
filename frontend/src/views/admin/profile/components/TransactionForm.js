@@ -19,7 +19,26 @@ const TransactionForm = () => {
 
   useEffect(() => {
     getProducts().then(()=>{})
+    getBillNo().then((d)=>{
+      setFormData({...formData, billNo: d.billNo});
+    })
+    
   }, [])
+
+  let initialData = {
+    customerId:-1,
+    billNo: "",
+    remark: "", // Add the remark field
+    orderDate: "",
+    details: [
+      {
+        productName: "",
+        qty: "",
+        rate: "",
+        gst:"",
+      },
+    ],
+  }
 
   const [products, setProducts] = useState([])
 
@@ -45,6 +64,18 @@ const TransactionForm = () => {
         // setIsSubmitting(false);
     }
 }
+async function getBillNo() {
+  try {
+      const response = await axios.get('http://localhost:5000/api/getBillNo');
+      // console.log(response.data);
+      const d = response.data
+      return d
+  } catch (error) {
+      console.error('Error getting Billno:', error);
+      // setError('Oops! Something went wrong. Please try again later.');
+      // setIsSubmitting(false);
+  }
+}
 
 
 async function addOrder(order) {
@@ -69,25 +100,13 @@ async function addOrder(order) {
   const location = useLocation();
   const { id } = location.state;
 
-  const [formData, setFormData] = useState({
-    customerId:-1,
-    billNo: "",
-    remark: "", // Add the remark field
-    orderDate: "",
-    details: [
-      {
-        productName: "",
-        qty: "",
-        rate: "",
-      },
-    ],
-  });
+  const [formData, setFormData] = useState(initialData);
 
   const [errors, setErrors] = useState({
     billNo: "",
     remark: "", // Add remark field to errors state
     orderDate: "",
-    details: [{ productName: "", qty: "", rate: "" }],
+    details: [{ productName: "", qty: "", rate: "", gst:"" }],
   });
 
   const handleChange = (e, index) => {
@@ -165,13 +184,13 @@ async function addOrder(order) {
         billNo: "",
         remark: "", // Reset remark field
         orderDate: "",
-        details: [{ productName: "", qty: "", rate: "" }],
+        details: [{ productName: "", qty: "", rate: "", gst:"" }],
       });
       setErrors({
         billNo: "",
         remark: "", // Reset remark field
         orderDate: "",
-        details: [{ productName: "", qty: "", rate: "" }],
+        details: [{ productName: "", qty: "", rate: "", gst:"" }],
       });
       // handleGoBack();
       addOrder(order)
@@ -180,7 +199,7 @@ async function addOrder(order) {
 
   const handleGoBack = () => {
     history.push({
-      pathname: `/admin/data-tables/profile/${id}`,
+      pathname: `/admin/customers/profile/${id}`,
       state: { id: id },
     });
   };
@@ -188,11 +207,11 @@ async function addOrder(order) {
   const handleAddDetail = () => {
     setFormData({
       ...formData,
-      details: [...formData.details, { productName: "", qty: "", rate: "" }],
+      details: [...formData.details, { productName: "", qty: "", rate: "", gst:""}],
     });
     setErrors({
       ...errors,
-      details: [...errors.details, { productName: "", qty: "", rate: "" }],
+      details: [...errors.details, { productName: "", qty: "", rate: "", gst:"" }],
     });
   };
 
@@ -210,6 +229,11 @@ async function addOrder(order) {
       details: updatedErrors,
     });
   };
+
+  const calcTotal = (qty, rate, gst)=>{
+    let total =  Number(qty)*Number(rate)+Number(gst)
+    return total
+  }
 
   return (
     <Box borderWidth="1px" borderRadius="lg" p="4" bg="white">
@@ -243,6 +267,7 @@ async function addOrder(order) {
               <Input
                 type="text"
                 name="billNo"
+                readOnly
                 value={formData.billNo}
                 onChange={(e) =>
                   setFormData({ ...formData, billNo: e.target.value })
@@ -369,11 +394,31 @@ async function addOrder(order) {
               </FormControl>
 
               <FormControl flex="1">
+                <FormLabel>
+                  <Text textColor={"red"} display={"inline"}>
+                    *
+                  </Text>{" "}
+                  GST
+                </FormLabel>
+                <Input
+                  type="number"
+                  name="gst"
+                  value={detail.gst}
+                  onChange={(e) => handleChange(e, index)}
+                  borderColor={
+                    errors.details[index] && errors.details[index].gst
+                      ? "red.500"
+                      : "gray.400"
+                  }
+                />
+              </FormControl>
+
+              <FormControl flex="1">
                 <FormLabel>Total</FormLabel>
                 <Input
                   type="text"
                   name="total"
-                  value={detail.qty * detail.rate}
+                  value={calcTotal(detail.qty, detail.rate, detail.gst)}
                   readOnly
                 />
               </FormControl>

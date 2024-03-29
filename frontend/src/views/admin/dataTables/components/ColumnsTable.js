@@ -40,6 +40,7 @@ import Card from "components/card/Card";
 import {
   MdOutlineRemoveRedEye,
   MdDeleteOutline,
+  
   MdOutlineEdit,
 } from "react-icons/md";
 // import { DefaultColumnFilter } from "./DefaultColumnFilter";
@@ -78,10 +79,10 @@ export default function ColumnsTable(props) {
 
   const handleAddCustomer = () => {
     history.push({
-      pathname: `/admin/data-tables/addCustomer`,
+      pathname: `/admin/customers/addCustomer`,
     });
   };
-  const { columnsData, tableData, handleClick, handleDelClick } = props;
+  const { columnsData, tableData, handleClick, handleDelClick, handleEditClick } = props;
 
   const [filterInput, setFilterInput] = useState("");
 
@@ -169,7 +170,7 @@ export default function ColumnsTable(props) {
           textAlign="center"
           my={4}
         >
-          No results found
+          No customers found
         </Text>
       ) : (
         <Table {...getTableProps()} variant="simple" color="gray.500" mb="24px">
@@ -220,7 +221,7 @@ export default function ColumnsTable(props) {
                           <IconButton
                             colorScheme={"blue"}
                             // size="md"
-                            me={4}
+                            me={2}
                             padding={0}
                             fontWeight="700"
                             onClick={() => handleClick(cell.row.original)}
@@ -232,10 +233,22 @@ export default function ColumnsTable(props) {
                           <IconButton
                             colorScheme={"red"}
                             // size="md"
+                            me={2}
                             padding={0}
                             fontWeight="700"
                             onClick={() => handleDelClick(cell.row.original)}
                             icon={<MdDeleteOutline />}
+                          >
+                            {/* View {" >>"} */}
+                          </IconButton>
+
+                          <IconButton
+                            colorScheme={"green"}
+                            // size="md"
+                            padding={0}
+                            fontWeight="700"
+                            onClick={() => handleEditClick(cell.row.original)}
+                            icon={<MdOutlineEdit />}
                           >
                             {/* View {" >>"} */}
                           </IconButton>

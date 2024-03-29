@@ -4,6 +4,8 @@ import { SimpleGrid, Text, useColorModeValue } from "@chakra-ui/react";
 import Card from "components/card/Card.js";
 import React from "react";
 import Information from "views/admin/profile/components/Information";
+import Info from "./Info";
+import Info2 from "./Info2";
 
 // Assets
 // contact={currentCustomer.mobile}
@@ -11,7 +13,11 @@ import Information from "views/admin/profile/components/Information";
 //           email={currentCustomer.email}
 //           gst={currentCustomer.GSTIN}
 export default function GeneralInformation(props) {
-  const { contact, address, email, gst, ...rest } = props;
+  const { contact, address, email, gst, orderTotal, paymentsTotal, currentStatus, status, ...rest } = props;
+
+  const gradient = `linear-gradient(60deg, #6a11cb 0%, #2575fc 100%)`;
+
+  const bg = useColorModeValue(gradient);
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
   const textColorSecondary = "gray.400";
@@ -36,37 +42,47 @@ export default function GeneralInformation(props) {
         a hand. We get our heart broken by people we love, even that we give
         them all...
       </Text> */}
-      <SimpleGrid columns='2' gap='20px'>
+      <SimpleGrid columns="2" gap="20px">
         <Information
           boxShadow={cardShadow}
-          title='Phone No'
-          value={`+91 ${contact}`}
+          title1="Phone No"
+          value1={`+91 ${contact}`}
+          title2="Email"
+          value2={email ?? "-"}
+          bg={bg}
         />
         <Information
           boxShadow={cardShadow}
-          title='Email'
-          value={email??'-'}
+          title2="Address"
+          value2={address}
+          title1="GSTIN"
+          value1={gst}
+          bg={bg}
         />
-        <Information
+      </SimpleGrid>
+      <SimpleGrid columns="3" mt={'1rem'} gap="20px">
+        <Info
           boxShadow={cardShadow}
-          title='Address'
-          value={address}
+          title="Order Total"
+          value={orderTotal}
+          bg={'red.500'}
+          color={'white'}
         />
-        <Information
+        <Info
           boxShadow={cardShadow}
-          title='GSTIN'
-          value={gst}
+          title="Payments Received"
+          value={paymentsTotal}
+          bg={'green.500'}
+          color={'white'}
+          
         />
-        {/* <Information
+        <Info2
           boxShadow={cardShadow}
-          title='Organization'
-          value='Simmmple Web LLC'
+          title="Current Status"
+          value={currentStatus}
+          bg={'white'}
+          color={status? 'green':'red'}
         />
-        <Information
-          boxShadow={cardShadow}
-          title='Birthday'
-          value='20 July 1986'
-        /> */}
       </SimpleGrid>
     </Card>
   );

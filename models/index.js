@@ -139,6 +139,9 @@ sequelize
       type: DataTypes.DATE,
       allowNull: false
     },
+    remark: {
+      type: DataTypes.STRING,
+    },
     TotalAmount: {
       type: DataTypes.NUMERIC,
       allowNull: false
@@ -150,8 +153,7 @@ sequelize
       validate: {
         isIn: [['created', 'paid', 'shipped', 'delivered']]
       }
-    },
-    remark: DataTypes.STRING
+    }
   });
   
   // ------------------------------------------------------ SHIPPING ------------------------------------------------------------
@@ -190,6 +192,11 @@ sequelize
     rate: {
       type: DataTypes.NUMERIC,
       allowNull: false
+    },
+    gst: {
+      type: DataTypes.NUMERIC,
+      allowNull: false,
+      defaultValue: 0 // Adding default value 0
     }
   });
   
@@ -203,6 +210,9 @@ sequelize
       primaryKey: true,
       autoIncrement: true
     },
+    remark: {
+      type: DataTypes.STRING,
+    },
     Amount: {
       type: DataTypes.NUMERIC,
       allowNull: false
@@ -211,6 +221,18 @@ sequelize
       type: DataTypes.DATE,
       allowNull: false
     }
+  });
+
+  const ShippingPreferences = sequelize.define('ShippingPreferences', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    LogisticName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
   });
   
 
@@ -233,9 +255,15 @@ sequelize
   
   Order.hasMany(Transaction, { foreignKey: 'orderId' });
   Transaction.belongsTo(Order, { foreignKey: 'orderId' });
+
+  Customer.hasMany(Transaction, { foreignKey: 'customerId' });
+  Transaction.belongsTo(Customer, { foreignKey: 'customerId' });
   
   Product.hasMany(OrderDetail, { foreignKey: 'pid' });
   OrderDetail.belongsTo(Product, { foreignKey: 'pid' });
+
+  Customer.hasMany(ShippingPreferences, {foreignKey : 'customerId'});
+  ShippingPreferences.belongsTo(Customer, {foreignKey : 'customerId'});
   
 
 
@@ -243,6 +271,11 @@ sequelize
 
   // ------------------------------------------------------ SYNCING THE MODELS ------------------------------------------------------------
 
+  // sequelize.drop().then(() => {
+  //   console.log('All tables dropped!');
+  // }).catch((error) => {
+  //   console.error('Error dropping tables:', error);
+  // });
   // Sync all defined models to the database
   sequelize.sync()
     .then(() => {
@@ -269,6 +302,7 @@ sequelize
     Shipping,
     OrderDetail,
     Transaction,
+    ShippingPreferences,
     sequelize // In case you need the Sequelize instance elsewhere
   };
   

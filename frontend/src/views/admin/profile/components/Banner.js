@@ -1,10 +1,11 @@
 // Chakra imports
-import { Avatar, Box, Flex, Text, useColorModeValue } from "@chakra-ui/react";
+import { Avatar, Box, Button, Text, useColorModeValue } from "@chakra-ui/react";
 import Card from "components/card/Card.js";
 import React from "react";
+import { useHistory } from 'react-router-dom';
 
 export default function Banner(props) {
-  const { banner, avatar, name, job } = props;
+  const { banner, avatar, name, job, id } = props;
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
   const textColorSecondary = "gray.400";
@@ -19,14 +20,14 @@ export default function Banner(props) {
         bgSize='cover'
         borderRadius='16px'
         // h='210px'
-        minH={'88px'}
+        minH={'116px'}
         w='100%'
       />
       <Avatar
         mx='auto'
         src={avatar}
-        h='87px'
-        w='87px'
+        h='96px'
+        w='96px'
         mt='-43px'
         border='4px solid'
         borderColor={borderColor}

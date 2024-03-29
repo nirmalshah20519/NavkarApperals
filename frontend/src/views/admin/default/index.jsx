@@ -135,6 +135,7 @@ export default function UserReports() {
       setIsModalOpen(false);
       fetchProducts();
       setSuccessMessage("Product added successfully.");
+      setNewProductName('')
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000); // Clear the message after 3 seconds

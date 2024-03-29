@@ -40,7 +40,7 @@ const TransactionDetail = () => {
 
   const [transactionData, setTransactionData] = useState(null);
 
-  const [save, setSave] = useState(false)
+  const [save, setSave] = useState(false);
 
   useEffect(() => {
     getTransaction().then(() => {
@@ -50,6 +50,9 @@ const TransactionDetail = () => {
       // setCustomer(currentCustomer)
       // console.log(customer);
     });
+    getPreference().then((d)=>{
+      setFormValues({...formValues, logisticName:d.LogisticName})
+    })
   }, []);
 
   // Sample transaction data, replace it with actual data from your API or state management
@@ -74,25 +77,28 @@ const TransactionDetail = () => {
       );
       // console.log(response.data);
       const d = response.data;
-      // console.log(d);
+      console.log(d);
       setTransactionData(d);
-      if(d.status==='shipped'){
-        setSave(true)
+      if (d.status === "shipped") {
+        setSave(true);
         const date = new Date(d.shippingDate);
         const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based, so add 1
-        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based, so add 1
+        const day = String(date.getDate()).padStart(2, "0");
 
         // Format the date for input type date
         const formattedDate = `${year}-${month}-${day}`;
 
-
-        const {logisticName, shippingDate, trackingNo} = d;
+        const { logisticName, shippingDate, trackingNo } = d;
         console.log(shippingDate);
         const status = d.status.charAt(0).toUpperCase() + d.status.slice(1);
-        setOrderStatus(status)
+        setOrderStatus(status);
         setShowForm(true);
-        setFormValues({logisticName, shippingDate:formattedDate, trackingNo})
+        setFormValues({
+          logisticName,
+          shippingDate: formattedDate,
+          trackingNo,
+        });
       }
       // setIsSubmitting(false);
     } catch (error) {
@@ -135,66 +141,117 @@ const TransactionDetail = () => {
       if (!formValues[field]) {
         errors[field] = `${field} is required`;
       }
-
-      
-      
     });
 
     setFormErrors(errors);
     if (Object.keys(errors).length === 0) {
       setIsSubmitting(true);
-      formValues.tid=tid
-      saveShipping(formValues).then(()=>{console.log("saved ");setSave(true)})
+      formValues.tid = tid;
+      saveShipping(formValues).then(() => {
+        console.log("saved ");
+        setSave(true);
+      });
       setIsSubmitting(false);
     }
   };
 
   const handleGoBack = () => {
     // console.log(id);
-    history.push(`/admin/data-tables/profile/${id.id}`, { id: id.id });
+    history.push(`/admin/customers/profile/${id.id}`, { id: id.id });
   };
 
-  async function getRecept(){
+  async function getRecept() {
     try {
-      const resp = await axios.get('http://localhost:5000/api/getReceipt/4');
+      console.log(tid);
+      const resp = await axios.get(
+        `http://localhost:5000/api/getReceipt/${tid}`
+      );
       return resp.data;
     } catch (error) {
       console.log(error);
     }
   }
 
-  async function saveShipping(shipping){
+  async function getPreference() {
     try {
-      const resp = await axios.post(`http://localhost:5000/api/addShipping`,shipping);
-      setAlert({ message: "Shipping data saved successfully", type: "success" }); // Setting success message
-      const  timer = setTimeout(() => {setAlert({});}, 3000); // Clearing alert after
+      console.log(id);
+      const resp = await axios.get(
+        `http://localhost:5000/api/getPreference/${id.id}`
+      );
+      return resp.data
+      
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function saveShipping(shipping) {
+    try {
+      const resp = await axios.post(
+        `http://localhost:5000/api/addShipping`,
+        shipping
+      );
+      setAlert({
+        message: "Shipping data saved successfully",
+        type: "success",
+      }); // Setting success message
+      const timer = setTimeout(() => {
+        setAlert({});
+      }, 3000); // Clearing alert after
       console.log(alert);
       // return resp.data;
     } catch (error) {
       console.log(error);
       setAlert({ message: "Something went wrong.", type: "error" }); // Setting success message
-      const  timer = setTimeout(() => {setAlert({});}, 3000); // Clearing alert after
+      const timer = setTimeout(() => {
+        setAlert({});
+      }, 3000); // Clearing alert after
     }
   }
 
-  const handlePrint = (id)=>{
-    setIsSubmitting(true)
-    console.log(id);
-    getRecept().then((d)=>{
-      // console.log(d);
-      const printWindow = window.open('', '_blank');
-        printWindow.document.open();
-        printWindow.document.write(d); // Assuming d contains the HTML content you want to print
-        printWindow.document.close();
-        const time = setTimeout(() => {
-          printWindow.print();
-          console.log('ppp');
-          setIsSubmitting(false)
-        }, 50);
+  async function onDelete(){
+    try {
+      const resp = await axios.delete(
+        `http://localhost:5000/api/deleteShipping/${tid}`
+      );
+      setAlert({
+        message: "Shipping data deleted successfully",
+        type: "success",
+      }); // Setting success message
+      setShowForm(false)
+      const timer = setTimeout(() => {
+        setAlert({});
+        handleGoBack()
         
-    })
-
+      }, 3000); // Clearing alert after
+      console.log(alert);
+      
+      // return resp.data;
+    } catch (error) {
+      console.log(error);
+      setAlert({ message: "Something went wrong.", type: "error" }); // Setting success message
+      const timer = setTimeout(() => {
+        setAlert({});
+      }, 3000); // Clearing alert after
+    }    
   }
+
+  const handlePrint = (id) => {
+    setIsSubmitting(true);
+    console.log(id);
+    getRecept().then((d) => {
+      // console.log(d);
+      const printWindow = window.open("", "_blank");
+      printWindow.document.open();
+      printWindow.document.write(d); // Assuming d contains the HTML content you want to print
+      printWindow.document.close();
+      const time = setTimeout(() => {
+        printWindow.print();
+        console.log("ppp");
+        setIsSubmitting(false);
+      }, 50);
+    });
+  };
 
   return (
     <Box p="4" bg="white" borderRadius="lg">
@@ -215,7 +272,12 @@ const TransactionDetail = () => {
               Transaction Detail
             </Text>
             <Spacer />
-            <IconButton as={MdPrint} boxSize={6} isLoading={isSubmitting} onClick={handlePrint} />
+            <IconButton
+              as={MdPrint}
+              boxSize={6}
+              isLoading={isSubmitting}
+              onClick={handlePrint}
+            />
           </Flex>
           <Text>
             <strong>Transaction ID:</strong> {transactionData.id}
@@ -227,19 +289,21 @@ const TransactionDetail = () => {
 
           <Table variant="striped" colorScheme="gray">
             <Thead>
-              <Tr>
+              <Tr bgColor={'gray.300'}>
                 <Th>Product</Th>
                 <Th>Quantity</Th>
                 <Th>Price</Th>
+                <Th>GST</Th>
                 <Th>Total</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {transactionData.items.map((item) => (
-                <Tr key={item.id}>
+              {transactionData.items.map((item, index) => (
+                <Tr key={item.id} bg={index % 2 === 0 ? "gray.100" : "white"}>
                   <Td>{item.name}</Td>
                   <Td>{item.quantity}</Td>
                   <Td>₹ {item.price.toFixed(2)}</Td>
+                  <Td>₹ {item.gst.toFixed(2)}</Td>
                   <Td>₹ {item.total.toFixed(2)}</Td>
                 </Tr>
               ))}
@@ -272,7 +336,7 @@ const TransactionDetail = () => {
 
           {showForm && (
             <>
-              <Text fontSize="2xl" fontWeight="bold" mt="8" mb="4">
+              <Text fontSize="xl" fontWeight="bold" mt="8" mb="4">
                 Shipping Details
               </Text>
               <form onSubmit={handleSubmit}>
@@ -336,7 +400,7 @@ const TransactionDetail = () => {
                     mt={4}
                     colorScheme="green"
                     // isLoading={isSubmitting}
-                    
+
                     type="button"
                   >
                     <em className="bi bi-whatsapp"></em>
@@ -346,6 +410,7 @@ const TransactionDetail = () => {
                     colorScheme="red"
                     // isLoading={isSubmitting}
                     type="button"
+                    onClick={onDelete}
                   >
                     <MdDeleteOutline />
                   </Button>

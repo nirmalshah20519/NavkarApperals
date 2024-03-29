@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import {
   Box,
@@ -16,11 +16,38 @@ import {
   AlertIcon,
 } from "@chakra-ui/react";
 import axios, * as others from 'axios';
-
+import { useParams } from 'react-router-dom';
 
 import { ArrowBackIcon } from "@chakra-ui/icons";
 
 const CustomerForm = () => {
+
+  const {id} = useParams();
+  const [isEdit, setIsEdit] = useState(false)
+  useEffect(()=>{
+    if(id){
+      getCustomer(id)
+      setIsEdit(true)
+    }
+  },[])
+
+  async function getCustomer(id) {
+
+    try {
+        const response = await axios.get(`http://localhost:5000/api/getCustomer/${id}`);
+        console.log(response.data);
+        setFormData(response.data)
+        // setAlert({ message: "Form submitted successfully! Redirecting to home ...", type: "success" }); // Setting success message
+        // const  timer = setTimeout(() => {setAlert({});handleGoBack();}, 2000); // Clearing alert after
+        
+    } catch (error) {
+        // console.error('Error adding customer:', error);
+        // setAlert({ message: error.message, type: "error" }); // Setting success message
+        // const  timer = setTimeout(() => {setAlert({});}, 2000); // Clearing alert after
+        
+    }
+}
+
 
   async function addCustomer(customerData) {
     // const axios = require('axios');
@@ -40,6 +67,26 @@ const CustomerForm = () => {
     }
 }
 
+async function updateCustomer(custData){
+  
+  // const axios = require('axios');
+  setIsSubmitting(true);
+  console.log("upd", custData);
+
+  try {
+      const response = await axios.post(`http://localhost:5000/api/updateCustomer/${id}`, custData);
+      console.log('Customer updated successfully:', response.data);
+      setAlert({ message: "Customer updated successfully! Redirecting to home ...", type: "success" }); // Setting success message
+      const  timer = setTimeout(() => {setAlert({});handleGoBack();}, 2000); // Clearing alert after
+      setIsSubmitting(false);
+  } catch (error) {
+      console.error('Error adding customer:', error);
+      setAlert({ message: error.message, type: "error" }); // Setting success message
+      const  timer = setTimeout(() => {setAlert({});}, 2000); // Clearing alert after
+      setIsSubmitting(false);
+  }
+}
+
 
   const history = useHistory();
   const [alert, setAlert] = useState({ message: "", type: "" });
@@ -57,7 +104,7 @@ const CustomerForm = () => {
     city: "",
     pincode: "",
     state: "",
-    gstin: "",
+    GSTIN: "",
   };
   const [formData, setFormData] = useState(initialData);
 
@@ -147,8 +194,7 @@ const CustomerForm = () => {
     // Validation rules
     Object.keys(formData).forEach((name) => {
       let errorMessage = "";
-      const value = formData[name].trim();
-
+      const value = String(formData[name]).trim();
       switch (name) {
         case "firstname":
           if (value === "") {
@@ -217,10 +263,17 @@ const CustomerForm = () => {
     if (formValid) {
       // Handle form submission here, e.g., send data to backend
       console.log(formData);
+      formData.gender="male"
       const custData = formData
-      setFormData(initialData);
+      setFormData({...initialData, logisticName:''});
       setErrors({});
-      addCustomer(custData);
+      if(isEdit){
+        updateCustomer(custData)
+      }
+      else{
+        addCustomer(custData);
+      }
+      console.log(custData);
       
     }
   };
@@ -241,7 +294,8 @@ const CustomerForm = () => {
           <ArrowBackIcon />
         </Text>
         <Heading as="h2" size="lg" mb="2">
-          Add Customer
+        {isEdit?'Update Customer':'Add New Customer'}
+
         </Heading>
       </Box>
       <form onSubmit={handleSubmit}>
@@ -287,24 +341,24 @@ const CustomerForm = () => {
               )}
             </FormControl>
 
-            <FormControl id="gender">
+            <FormControl id="logistic">
               <FormLabel>
                 {" "}
                 <Text textColor={"red"} display={"inline"}>
                   *
                 </Text>{" "}
-                Gender
+                Transport Name
               </FormLabel>
-              <RadioGroup name="gender" value={formData.gender}>
-                <Stack direction="row">
-                  <Radio value="male" onChange={handleRadioChange}>
-                    Male
-                  </Radio>
-                  <Radio value="female" onChange={handleRadioChange}>
-                    Female
-                  </Radio>
-                </Stack>
-              </RadioGroup>
+              <Input
+                type="text"
+                name="logisticName"
+                value={formData.logisticName}
+                onChange={handleChange}
+                borderColor={errors.lastname ? "red.500" : "gray.400"}
+              />
+              {errors.lastname && (
+                <Text textColor={"red"}>{errors.logisticName}</Text>
+              )}
             </FormControl>
           </Grid>
 
@@ -441,16 +495,16 @@ const CustomerForm = () => {
               {errors.state && <Text textColor={"red"}>{errors.state}</Text>}
             </FormControl>
 
-            <FormControl id="gstin">
+            <FormControl id="GSTIN">
               <FormLabel> GSTIN</FormLabel>
               <Input
                 type="text"
-                name="gstin"
-                value={formData.gstin}
+                name="GSTIN"
+                value={formData.GSTIN??''}
                 onChange={handleChange}
-                borderColor={errors.gstin ? "red.500" : "gray.400"}
+                borderColor={errors.GSTIN ? "red.500" : "gray.400"}
               />
-              {errors.gstin && <Text textColor={"red"}>{errors.gstin}</Text>}
+              {errors.GSTIN && <Text textColor={"red"}>{errors.GSTIN}</Text>}
             </FormControl>
           </Grid>
 
@@ -461,7 +515,9 @@ const CustomerForm = () => {
             borderRadius={3}
             isLoading={isSubmitting}
           >
-            Submit
+            {
+              isEdit? 'Update' : 'Submit'
+            }
           </Button>
         </Stack>
       </form>
