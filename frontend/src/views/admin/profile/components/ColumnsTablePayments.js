@@ -52,7 +52,7 @@ import {
       {
         columns,
         data,
-        initialState: { pageIndex: 0, pageSize: 5 }, // Setting initial page index and page size
+        initialState: { pageIndex: 0, pageSize: 1000 }, // Setting initial page index and page size
       },
       useGlobalFilter,
       useSortBy,
@@ -265,19 +265,6 @@ import {
                 <NumberDecrementStepper />
               </NumberInputStepper>
             </NumberInput>
-            <Select
-              w={32}
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-              }}
-            >
-              {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-                <option key={pageSize} value={pageSize}>
-                  Show {pageSize}
-                </option>
-              ))}
-            </Select>
           </Flex>
   
           <Flex>

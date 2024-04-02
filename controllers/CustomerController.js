@@ -6,6 +6,8 @@ const Customer =  db.Customer;
 const Order = db.Order;
 const Transaction = db.Transaction;
 const ShippingPreference = db.ShippingPreferences;
+const Shipping = db.Shipping
+
 // --------------------------------------------------------customer types--------------------------------------------------------- 
 
 // POST req for customer Type
@@ -212,19 +214,24 @@ const getRequiredDataCustomersById = async (req, res) => {
     // Find specific fields of transactions associated with the customer
     const transactions = await Order.findAll({
       where: { customerId: customerId },
-      attributes: ['id', 'BillNo', 'orderDate', 'TotalAmount', 'remark'],
-      order: [['orderDate', 'DESC']]
+      attributes: ['id', 'BillNo', 'orderDate', 'TotalAmount', 'remark', 'shippingID'],
+      order: [['orderDate', 'DESC']],
+      include:Shipping
+      
     });
+    console.log(transactions);
 
     const payments = await  Transaction.findAll({where:{customerId :customerId}, attributes: ['id', 'remark', 'Amount','TransactionDate'], order: [['TransactionDate', 'DESC']]});
 
-    const transformedTransactions = transactions.map(transaction => ({
+    const transformedTransactions = transactions.map(transaction =>({
       id: transaction.id,
       datetime: transaction.orderDate.toISOString(), // Assuming orderDate is a Date object
       remark: transaction.remark,
       amount: transaction.TotalAmount,
-      billNo: transaction.BillNo
+      billNo: transaction.BillNo,
+      shippingId : transaction.Shipping?transaction.Shipping.TrackingNo:''
     }));
+    console.log(transformedTransactions);
 
     // Construct full name
     const name = `${customer.firstname} ${customer.lastname}`;

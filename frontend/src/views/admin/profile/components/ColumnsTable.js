@@ -52,7 +52,7 @@ export default function ColumnsTable(props) {
     {
       columns,
       data,
-      initialState: { pageIndex: 0, pageSize: 5 }, // Setting initial page index and page size
+      initialState: { pageIndex: 0, pageSize: 1000 }, // Setting initial page index and page size
     },
     useGlobalFilter,
     useSortBy,
@@ -150,13 +150,13 @@ export default function ColumnsTable(props) {
                 {row.cells.map((cell, index) => {
                   let data = "";
                   if (
-                    ["ID", "REMARK", "BILL"].includes(
+                    ["ID", "REMARK", "BILL", "TRACKING NO"].includes(
                       cell.column.Header
                     )
                   ) {
                     data = (
                       <Text color={textColor} fontSize="md" fontWeight="700">
-                        {cell.value}
+                        {cell.value? cell.value : "-"}
                       </Text>
                     );
                     
@@ -275,19 +275,7 @@ export default function ColumnsTable(props) {
               <NumberDecrementStepper />
             </NumberInputStepper>
           </NumberInput>
-          <Select
-            w={32}
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-            }}
-          >
-            {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
-            ))}
-          </Select>
+          
         </Flex>
 
         <Flex>

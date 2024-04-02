@@ -16,6 +16,10 @@ export const columnsDataTransactions = [
       accessor: "amount",
     },
     {
+      Header: "TRACKING NO",
+      accessor: "shippingId",
+    },
+    {
       Header: "BILL",
       accessor: "billNo",
     },
