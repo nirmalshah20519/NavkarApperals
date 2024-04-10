@@ -629,6 +629,22 @@ const printLedger = async (req, res) => {
 
   const resp = [...mappedTransactions1, ...mappedTransactions2]
 
+  let credit = 0;
+  let debit = 0;
+
+  mappedTransactions1.forEach(t=>{
+    console.log(t.credit);
+    credit+=t.credit;
+  })
+
+  mappedTransactions2.forEach(t=>{
+    console.log(t.debit);
+    debit+=t.debit;
+  })
+
+  const net = credit-debit;
+
+
 
 
 
@@ -688,6 +704,14 @@ const printLedger = async (req, res) => {
       data = data.replace("##city##", city);
       data = data.replace("##contact##", contact);
       data = data.replace("##gstin##", gstin);
+
+
+      data = data.replace("##credit##", number.formatIndianCurrency(credit));
+      data = data.replace("##debit##", number.formatIndianCurrency(debit));
+
+      data = data.replace("##colorclass##", net>0?'text-success':'text-danger');
+
+      data = data.replace("##net##", number.formatIndianCurrency(net));
 
       data = data.replace("##ledgerdetail##", htmlTxt);
       res.send(data); 

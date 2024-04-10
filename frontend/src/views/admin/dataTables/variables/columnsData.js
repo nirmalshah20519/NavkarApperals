@@ -44,14 +44,14 @@ export const columnsDataColumns = [
   {
     Header: "NAME",
     accessor: "name",
-  },
-  {
-    Header: "EMAIL",
-    accessor: "email",
-  },
+  },  
   {
     Header: "MOBILE",
     accessor: "mobile",
+  },
+  {
+    Header: "STATUS",
+    accessor: "status",
   },
   {
     Header: "ACTION",

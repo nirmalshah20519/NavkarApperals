@@ -45,17 +45,17 @@ import {
 } from "react-icons/md";
 // import { DefaultColumnFilter } from "./DefaultColumnFilter";
 
-const HighlightedText = ({ text = "", highlight = "" }) => {
+const HighlightedText = ({ text = "", highlight = "", textColor = "#3F3F3F" }) => {
   // Ensure text is a string
   const textAsString = String(text);
 
   if (!highlight.trim()) {
-    return <span style={{fontWeight:'bold', fontSize:'1.1rem',color:'#3F3F3F'}}>{textAsString}</span>;
+    return <span style={{fontWeight:'bold', fontSize:'1.1rem',color:textColor}}>{textAsString}</span>;
   }
   const regex = new RegExp(`(${highlight})`, "gi");
   const parts = textAsString.split(regex);
   return (
-    <span style={{fontWeight:'bold', fontSize:'1.1rem',color:'#3F3F3F'}}>
+    <span style={{fontWeight:'bold', fontSize:'1.1rem',color:textColor}}>
       {parts.filter(String).map((part, index) =>
         regex.test(part) ? (
           <mark
@@ -213,6 +213,18 @@ export default function ColumnsTable(props) {
                         <HighlightedText
                           text={cell.value ? cell.value : "-"}
                           highlight={filterInput}
+                        />
+                      );
+                    } else if (
+                      ["STATUS"].includes(
+                        cell.column.Header
+                      )
+                    ) {
+                      content = (
+                        <HighlightedText
+                          text={cell.value ? (cell.value < 0 ? '- ₹ ':'₹ ')+Math.abs(cell.value) : `-`}
+                          highlight={filterInput}
+                          textColor= {cell.value>0?"#4caf50":"#f44336"}
                         />
                       );
                     } else if (cell.column.Header === "ACTION") {
