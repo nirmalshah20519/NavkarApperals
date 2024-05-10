@@ -22,7 +22,7 @@ app.use("/api", router_customer);
 app.use("/api", router_order);
 
 app.get("/", (req, res) => {
-  res.json({ message: "hello" });
+
 });
 
 const PORT = 5000;

@@ -41,6 +41,7 @@ import {
   TabPanels,
   Tab,
   TabPanel,
+  Spinner,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 
@@ -60,7 +61,11 @@ import BillDetails from "views/admin/profile/variables/BillDetails.json";
 import avatar from "assets/img/avatars/customer.jpg";
 import banner from "assets/img/auth/banner.png";
 import React, { useEffect, useState } from "react";
-import { columnsDataLedger, columnsDataPayments, columnsDataTransactions } from "./variables/ColumnData";
+import {
+  columnsDataLedger,
+  columnsDataPayments,
+  columnsDataTransactions,
+} from "./variables/ColumnData";
 import ColumnsTable from "views/admin/profile/components/ColumnsTable";
 import axios, * as others from "axios";
 import ColumnsTablePayments from "./components/ColumnsTablePayments";
@@ -75,22 +80,24 @@ export default function Overview() {
   const [customerPaymentData, setCustomerPaymentData] = useState([]);
   const [customer, setCustomer] = useState({});
 
-  const [orderTotal, setOrderTotal] = useState(0)
-  const [paymentsTotal, setPaymentsTotal] = useState(0)
+  const [orderTotal, setOrderTotal] = useState(0);
+  const [paymentsTotal, setPaymentsTotal] = useState(0);
 
   const [alert, setAlert] = useState({ message: "", type: "" });
 
   const [error, setError] = useState(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     getCustomers().then((d) => {
       // console.log("loaded..",d);
-      setOrderTotal(0)
-      d.transactions.forEach(e=>setOrderTotal(o=>o+Number(e.amount)))
+      setOrderTotal(0);
+      d.transactions.forEach((e) => setOrderTotal((o) => o + Number(e.amount)));
       // console.log(orderTotal);
 
-      setPaymentsTotal(0)
-      d.payments.forEach(e=>setPaymentsTotal(o=>o+Number(e.Amount)))
+      setPaymentsTotal(0);
+      d.payments.forEach((e) => setPaymentsTotal((o) => o + Number(e.Amount)));
       // console.log(paymentsTotal);
     });
   }, []);
@@ -141,7 +148,7 @@ export default function Overview() {
       pathname: `/admin/customers/profile/${customer.id}/addPayment`,
       state: { id: customer.id },
     });
-  }
+  };
 
   const handleViewTransaction = (tid) => {
     history.push({
@@ -199,11 +206,16 @@ export default function Overview() {
         `http://localhost:5000/api/deleteTransaction/${id}`
       );
       // console.log(response.data);
-      setAlert({ message: "Transaction deleted successfully!", type: "success" }); // Setting success message
+      setAlert({
+        message: "Transaction deleted successfully!",
+        type: "success",
+      }); // Setting success message
       const timer = setTimeout(() => {
         setAlert({});
       }, 2500); // Clearing alert after
-      getCustomers().then(()=>{console.log('donr');})
+      getCustomers().then(() => {
+        console.log("donr");
+      });
 
       // setIsSubmitting(false);
     } catch (error) {
@@ -223,11 +235,11 @@ export default function Overview() {
     setIsOpen(true);
   };
 
-  const handlePayDelClick = (id) =>{
+  const handlePayDelClick = (id) => {
     console.log(id);
-    setpyId(id)
-    setPyIsOpen(true)
-  }
+    setpyId(id);
+    setPyIsOpen(true);
+  };
 
   const handleDeleteConfirmed = () => {
     console.log(ordId);
@@ -251,7 +263,7 @@ export default function Overview() {
       const response = await axios.get(
         `http://localhost:5000/api/printLedger/${id}`
       );
-      return response.data
+      return response.data;
 
       // setIsSubmitting(false);
     } catch (error) {
@@ -265,9 +277,10 @@ export default function Overview() {
   }
 
   const handlePrint = () => {
-
+    setIsLoading(true); // Start loading
     getLedger().then((d) => {
       // console.log(d);
+      setIsLoading(false); // Start loading
       const printWindow = window.open("", "_blank");
       printWindow.document.open();
       printWindow.document.write(d); // Assuming d contains the HTML content you want to print
@@ -279,42 +292,40 @@ export default function Overview() {
   };
 
   const handlePyDeleteConfirmed = () => {
-    deletePayment(pyId).then((data)=>{
-      if(!data){
-        setAlert({message:"Failed to Delete Payment.",type:'error'})
-      }else{
-        setAlert({message:`Successfully Deleted Payment.` , type : 'success' })
+    deletePayment(pyId).then((data) => {
+      if (!data) {
+        setAlert({ message: "Failed to Delete Payment.", type: "error" });
+      } else {
+        setAlert({ message: `Successfully Deleted Payment.`, type: "success" });
       }
-    })
-    setpyId(-1)
+    });
+    setpyId(-1);
     onPyClose();
-    
-  }
+  };
 
   const formatIndianCurrency = (num) => {
     // Convert number to string
     let strNum = num.toString();
-    
+
     // Separate integer part from decimal part if present
     let parts = strNum.split(".");
     let integerPart = parts[0];
     let decimalPart = parts.length > 1 ? "." + parts[1] : "";
-    
+
     // Add commas to integer part
     let formattedIntegerPart = "";
     for (let i = integerPart.length - 1, j = 0; i >= 0; i--, j++) {
-        if (j > 0 && j % 3 === 0) {
-            formattedIntegerPart = "," + formattedIntegerPart;
-        }
-        formattedIntegerPart = integerPart[i] + formattedIntegerPart;
+      if (j > 0 && j % 3 === 0) {
+        formattedIntegerPart = "," + formattedIntegerPart;
+      }
+      formattedIntegerPart = integerPart[i] + formattedIntegerPart;
     }
-    
+
     // Return the formatted number
-    return '₹ '+formattedIntegerPart + decimalPart;
-}
+    return "₹ " + formattedIntegerPart + decimalPart;
+  };
 
-// const orderTotal = customer.transactions
-
+  // const orderTotal = customer.transactions
 
   return (
     <Box>
@@ -357,10 +368,9 @@ export default function Overview() {
           gst={customer.GSTIN}
           orderTotal={formatIndianCurrency(orderTotal)}
           paymentsTotal={formatIndianCurrency(paymentsTotal)}
-          currentStatus={formatIndianCurrency(paymentsTotal-orderTotal)}
-          status={paymentsTotal-orderTotal>0}
+          currentStatus={formatIndianCurrency(paymentsTotal - orderTotal)}
+          status={paymentsTotal - orderTotal > 0}
         />
-    
 
         {/* <Storage
     used={25.6}
@@ -415,7 +425,7 @@ export default function Overview() {
 
       {/* Tab Pane for Orders and Transactions */}
       <Tabs isFitted variant="enclosed">
-        <TabList mb="1em" bg={'white'}>
+        <TabList mb="1em" bg={"white"}>
           <Tab
             _selected={{
               bg: "blue.500",
@@ -475,7 +485,7 @@ export default function Overview() {
                 Add Order
               </Button>
             </Flex>
-            
+
             <ColumnsTable
               columnsData={columnsDataTransactions}
               tableData={customer.transactions ?? []}
@@ -507,7 +517,7 @@ export default function Overview() {
               </Button>
             </Flex>
             <ColumnsTablePayments
-              columnsData={columnsDataPayments }
+              columnsData={columnsDataPayments}
               tableData={customer.payments ?? []}
               handleDelClick={handlePayDelClick}
             />
@@ -532,10 +542,19 @@ export default function Overview() {
                 Ledger
               </Text>
               <Button colorScheme="blue" onClick={handlePrint}>
-                Generate Ledger
+                {isLoading ? (
+                  <Spinner
+                    thickness="4px"
+                    speed="1s"
+                    emptyColor="gray.200"
+                    color="blue.500"
+                    size="lg"
+                  />
+                ):
+                'Generate Ledger'}
               </Button>
             </Flex>
-            
+
             <ColumnsTableLedger
               columnsData={columnsDataLedger}
               tableData={customer.ledger ?? []}
@@ -569,7 +588,6 @@ export default function Overview() {
         </AlertDialogOverlay>
       </AlertDialog>
 
-
       {/* /pymt  */}
 
       <AlertDialog
@@ -589,7 +607,11 @@ export default function Overview() {
               <Button ref={cancelRef} onClick={onPyClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={handlePyDeleteConfirmed} ml={3}>
+              <Button
+                colorScheme="red"
+                onClick={handlePyDeleteConfirmed}
+                ml={3}
+              >
                 Delete
               </Button>
             </AlertDialogFooter>

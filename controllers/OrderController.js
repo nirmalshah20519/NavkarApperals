@@ -13,6 +13,7 @@ const ShippingPreference = db.ShippingPreferences;
 
 const fs = require("fs");
 const path = require("path");
+
 // ------------------------------------------------------------- Product ------------------------------------------------------------
 
 // POST req for product
@@ -566,27 +567,39 @@ const getLedger = async (req, res) => {
       where: { customerId: custID },
     });
 
-    const mappedTransactions1 = trasactionCustList.map(transaction => ({
+    const mappedTransactions1 = trasactionCustList.map((transaction) => ({
       id: transaction.id,
       remark: transaction.remark,
       date: transaction.TransactionDate,
-      credit: parseFloat(transaction.Amount) > 0 ? parseFloat(transaction.Amount) : null,
-      debit: parseFloat(transaction.Amount) <= 0 ? parseFloat(transaction.Amount) * -1 : null
-  }));
+      credit:
+        parseFloat(transaction.Amount) > 0
+          ? parseFloat(transaction.Amount)
+          : null,
+      debit:
+        parseFloat(transaction.Amount) <= 0
+          ? parseFloat(transaction.Amount) * -1
+          : null,
+    }));
 
     const transactionOrderList = await Transaction.findAll({
       where: { orderId: orderIds },
     });
 
-    const mappedTransactions2 = transactionOrderList.map(transaction => ({
+    const mappedTransactions2 = transactionOrderList.map((transaction) => ({
       id: transaction.id,
       remark: transaction.remark,
       date: transaction.TransactionDate,
-      credit: parseFloat(transaction.Amount) <= 0 ? parseFloat(transaction.Amount) * -1 : null,
-      debit: parseFloat(transaction.Amount) > 0 ? parseFloat(transaction.Amount) : null,
-  }));
+      credit:
+        parseFloat(transaction.Amount) <= 0
+          ? parseFloat(transaction.Amount) * -1
+          : null,
+      debit:
+        parseFloat(transaction.Amount) > 0
+          ? parseFloat(transaction.Amount)
+          : null,
+    }));
 
-    const resp = [...mappedTransactions1, ...mappedTransactions2]
+    const resp = [...mappedTransactions1, ...mappedTransactions2];
 
     res.status(200).send(resp);
   } catch (error) {
@@ -595,6 +608,8 @@ const getLedger = async (req, res) => {
   }
 };
 
+const puppeteer = require('puppeteer');
+
 const printLedger = async (req, res) => {
   const custId = req.params.id;
 
@@ -602,8 +617,9 @@ const printLedger = async (req, res) => {
     where: { customerId: custId },
     attributes: ["id"],
   });
-  const orderIds = orderList.map((order) => order.id);
-  const trasactionCustList = await Transaction.findAll({ 
+  const orderIds = orderList.map(order => order.id);
+
+  const trasactionCustList = await Transaction.findAll({
     where: { customerId: custId },
   });
 
@@ -612,8 +628,8 @@ const printLedger = async (req, res) => {
     remark: transaction.remark,
     date: transaction.TransactionDate,
     credit: parseFloat(transaction.Amount) > 0 ? parseFloat(transaction.Amount) : null,
-    debit: parseFloat(transaction.Amount) <= 0 ? parseFloat(transaction.Amount) * -1 : null
-}));
+    debit: parseFloat(transaction.Amount) <= 0 ? parseFloat(transaction.Amount) * -1 : null,
+  }));
 
   const transactionOrderList = await Transaction.findAll({
     where: { orderId: orderIds },
@@ -625,101 +641,107 @@ const printLedger = async (req, res) => {
     date: transaction.TransactionDate,
     credit: parseFloat(transaction.Amount) <= 0 ? parseFloat(transaction.Amount) * -1 : null,
     debit: parseFloat(transaction.Amount) > 0 ? parseFloat(transaction.Amount) : null,
-}));
+  }));
 
-  const resp = [...mappedTransactions1, ...mappedTransactions2]
-
+  const resp = [...mappedTransactions1, ...mappedTransactions2];
   let credit = 0;
   let debit = 0;
 
-  mappedTransactions1.forEach(t=>{
-    console.log(t.credit);
-    credit+=t.credit;
-  })
+  mappedTransactions1.forEach(t => {
+    if (t.credit) credit += t.credit;
+  });
 
-  mappedTransactions2.forEach(t=>{
-    console.log(t.debit);
-    debit+=t.debit;
-  })
+  mappedTransactions2.forEach(t => {
+    if (t.debit) debit += t.debit;
+  });
 
-  const net = credit-debit;
-
-
-
-
-
-
-
+  const net = credit - debit;
 
   let htmlTxt = resp
     .map((item, index) => {
       return ` <tr>
-        <td>${index+1}</td>
-        <td>${ new Date( item.date).toLocaleDateString()}</td>
+        <td>${index + 1}</td>
+        <td>${new Date(item.date).toLocaleDateString()}</td>
         <td>${item.remark}</td>
-        <td class="text-success">${ number.formatIndianCurrency(item.credit)}</td>
-        <td class="text-danger">${ number.formatIndianCurrency(item.debit)}</td>
+        <td class="text-success">${number.formatIndianCurrency(item.credit)}</td>
+        <td class="text-danger">${number.formatIndianCurrency(item.debit)}</td>
       </tr>`;
     })
     .join("");
-  // console.log(htmlTxt);
-
 
   const customer = await Customer.findOne({ where: { id: custId } });
-
-
-
   const name = customer.firstname + " " + customer.lastname;
   const address = customer.address1 + " " + customer.address2;
-
   const city = customer.city + "-" + customer.pincode;
-
   const contact = "+91" + " " + customer.contact;
   const gstin = customer.GSTIN;
 
-  
-
-
-  // console.log(totalInWords);
-  // console.log(totalInWords);
-
   try {
-    // Construct the file path for receipt.html
     const filePath = path.join(__dirname, "..", "Template", "ledger.html");
-
-    // Read the receipt.html file asynchronously
-    fs.readFile(filePath, "utf8", (err, data) => {
-      if (err) {
-        console.error("Error reading receipt file:", err);
-        return res.status(500).send("Internal Server Error");
-      }
-
-      // Send the HTML content as the response
-      // Here, you may need to modify the HTML content to include correct paths to images
-      // Assuming the images are in the same folder as the HTML file,
-      // you can use relative paths in the HTML file
-      // console.log(data);
-      data = data.replace("##name##", name);
-      data = data.replace("##address##", address);
-      data = data.replace("##city##", city);
-      data = data.replace("##contact##", contact);
-      data = data.replace("##gstin##", gstin);
+    const template = await fs.promises.readFile(filePath, "utf8");
+    let data = template.replace("##name##", name)
+      .replace("##address##", address)
+      .replace("##city##", city)
+      .replace("##contact##", contact)
+      .replace("##gstin##", gstin)
+      .replace("##credit##", number.formatIndianCurrency(credit))
+      .replace("##debit##", number.formatIndianCurrency(debit))
+      .replace("##colorclass##", net > 0 ? "text-success" : "text-danger")
+      .replace("##net##", number.formatIndianCurrency(net))
+      .replace("##ledgerdetail##", htmlTxt);
 
 
-      data = data.replace("##credit##", number.formatIndianCurrency(credit));
-      data = data.replace("##debit##", number.formatIndianCurrency(debit));
 
-      data = data.replace("##colorclass##", net>0?'text-success':'text-danger');
+     // Format date and time for the file name
+  const date = new Date();
+  const dateString = `d${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+  const timeString = `t${date.getHours().toString().padStart(2, '0')}_${date.getMinutes().toString().padStart(2, '0')}`;
 
-      data = data.replace("##net##", number.formatIndianCurrency(net));
+  const baseDir = 'D:/Projects/NvkrPdfs';
 
-      data = data.replace("##ledgerdetail##", htmlTxt);
-      res.send(data); 
-    });
+  const safeName = name.replace(/[^a-zA-Z0-9]/g, "_"); // Sanitize name to be filesystem safe
+  const fileName = `${safeName}_${dateString}_${timeString}.pdf`;
+  const pdfPath = path.join(baseDir, fileName);
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(data);
+    await page.pdf({ path: pdfPath, format: 'A4', margin: {
+      top: "15mm",    // Top margin
+      right: "15mm",  // Right margin
+      bottom: "15mm", // Bottom margin
+      left: "15mm"    // Left margin
+    } });
+
+    await browser.close();
+
+    console.log('ttt');
+
+    // Optionally send the PDF file directly to the client:
+    res.status(200).send(data);
   } catch (error) {
-    console.error("Error retrieving transactions:", error);
-    return res.status(500).send("Internal Server Error");
+    console.error("Error generating PDF:", error);
+    res.status(500).send("Internal Server Error");
   }
+};
+
+
+const send = (req, res) => {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  require("dotenv").config();
+  const client = require("twilio")(accountSid, authToken);
+
+  client.messages
+    .create({
+      from: "whatsapp:+14155238886",
+      body: "Hello there!",
+      to: "whatsapp:+919374627351",
+    })
+    .then((message) => console.log(message));
+
+  // res.json(client);
+  res.status(200).send({ message: "lll" });
 };
 
 //--------------------------------------------------------- export --------------------------------------------------------------------
@@ -739,5 +761,6 @@ module.exports = {
   addPayment,
   deleteTransaction,
   getLedger,
-  printLedger
+  printLedger,
+  send,
 };

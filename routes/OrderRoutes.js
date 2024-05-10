@@ -42,4 +42,6 @@ router.post("/addShipping", OrderController.addShipping);
 router.delete("/deleteShipping/:tid", OrderController.deleteShipping); 
 // router.post("/updateShippingIdInOrder", OrderController.updateShippingIdInOrder); 
 
+router.get('/send', OrderController.send)
+
 module.exports = router;
