@@ -88,6 +88,7 @@ export default function Overview() {
   const [error, setError] = useState(null);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoading2, setIsLoading2] = useState(false);
 
   useEffect(() => {
     getCustomers().then((d) => {
@@ -276,6 +277,41 @@ export default function Overview() {
     }
   }
 
+  async function whatsappLedger() {
+    // const axios = require('axios');
+    // setIsSubmitting(true);
+    console.log('idddd');
+    console.log(id);
+
+    setIsLoading2(true)
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/sendLedger/${id}`
+      ).then(resp=>{
+        console.log(resp);
+        setIsLoading2(false)
+        setAlert({ message: "Message sent successfully", type: "success" }); // Setting success message
+        const timer = setTimeout(() => {
+          setAlert({});
+        }, 3000); // Clearing alert after
+      })
+      .catch(err=>{
+        console.log(err);
+        setIsLoading2(false)
+        setAlert({ message: 'Error Sending Message', type: "error" }); // Setting success message
+        const timer = setTimeout(() => {
+          setAlert({});
+        }, 3000); // Clearing alert after
+      });
+      // return response.data;
+
+      // setIsSubmitting(false);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   const handlePrint = () => {
     setIsLoading(true); // Start loading
     getLedger().then((d) => {
@@ -304,13 +340,13 @@ export default function Overview() {
   };
 
   const formatIndianCurrency = (num) => {
-    // Convert number to string
-    let strNum = num.toString();
+    // Convert number to string and fix to two decimal places
+    let strNum = num.toFixed(2).toString();
 
-    // Separate integer part from decimal part if present
+    // Separate integer part from decimal part
     let parts = strNum.split(".");
     let integerPart = parts[0];
-    let decimalPart = parts.length > 1 ? "." + parts[1] : "";
+    let decimalPart = parts.length > 1 ? "." + parts[1] : ".00"; // Ensure there are always two decimal digits
 
     // Add commas to integer part
     let formattedIntegerPart = "";
@@ -424,6 +460,12 @@ export default function Overview() {
       </Grid> */}
 
       {/* Tab Pane for Orders and Transactions */}
+      {alert.message && (
+        <Alert status={alert.type} mt="4">
+          <AlertIcon />
+          {alert.message}
+        </Alert>
+      )}
       <Tabs isFitted variant="enclosed">
         <TabList mb="1em" bg={"white"}>
           <Tab
@@ -541,6 +583,15 @@ export default function Overview() {
               >
                 Ledger
               </Text>
+              <Flex                
+                
+                justify="end"
+                me="20px"
+                align="center"
+                bg={"white"}
+                gap={'8px'}
+              >
+
               <Button colorScheme="blue" onClick={handlePrint}>
                 {isLoading ? (
                   <Spinner
@@ -550,9 +601,24 @@ export default function Overview() {
                     color="blue.500"
                     size="lg"
                   />
-                ):
-                'Generate Ledger'}
+                ) : (
+                  "Generate Ledger"
+                )}
               </Button>
+              <Button colorScheme="green" onClick={whatsappLedger}>
+                {isLoading2 ? (
+                  <Spinner
+                    thickness="4px"
+                    speed="1s"
+                    emptyColor="gray.200"
+                    color="green.500"
+                    size="lg"
+                  />
+                ) : (
+                  <em className="bi bi-whatsapp"></em>
+                )}
+              </Button>
+              </Flex>
             </Flex>
 
             <ColumnsTableLedger
@@ -562,6 +628,7 @@ export default function Overview() {
           </TabPanel>
         </TabPanels>
       </Tabs>
+      
 
       <AlertDialog
         isOpen={isOpen}

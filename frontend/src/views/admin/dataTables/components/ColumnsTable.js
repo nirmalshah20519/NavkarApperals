@@ -222,9 +222,10 @@ export default function ColumnsTable(props) {
                     ) {
                       content = (
                         <HighlightedText
-                          text={cell.value ? (cell.value < 0 ? '- ₹ ':'₹ ')+Math.abs(cell.value) : `-`}
+                          text={cell.value ? (cell.value < 0 ? '- ₹ ':'₹ ')+Math.abs(cell.value).toFixed(2) : `-`}
                           highlight={filterInput}
                           textColor= {cell.value>0?"#4caf50":"#f44336"}
+                          // textAlign={'right'}
                         />
                       );
                     } else if (cell.column.Header === "ACTION") {

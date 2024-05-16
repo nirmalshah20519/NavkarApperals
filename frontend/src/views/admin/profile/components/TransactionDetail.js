@@ -20,12 +20,13 @@ import {
   IconButton,
   Alert,
   AlertIcon,
+  Spinner,
 } from "@chakra-ui/react";
 import { useHistory, useLocation } from "react-router-dom";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { MdDeleteOutline } from "react-icons/md";
 import axios, * as others from "axios";
-import { MdPrint } from "react-icons/md";
+import { MdPrint, MdWhatsapp } from "react-icons/md";
 
 const TransactionDetail = () => {
   const history = useHistory();
@@ -45,27 +46,11 @@ const TransactionDetail = () => {
   useEffect(() => {
     getTransaction().then(() => {
       console.log("Order loaded..");
-      // console.log(orderStatus);
-      // const currentCustomer = customerData.find(customer => customer.id === Number(id))
-      // setCustomer(currentCustomer)
-      // console.log(customer);
     });
-    getPreference().then((d)=>{
-      setFormValues({...formValues, logisticName:d.LogisticName})
-    })
+    getPreference().then((d) => {
+      setFormValues({ ...formValues, logisticName: d.LogisticName ?? "" });
+    });
   }, []);
-
-  // Sample transaction data, replace it with actual data from your API or state management
-  // const transactionData = {
-  //   id: tid,
-  //   date: "2024-03-01",
-  //   total: 250.0,
-  //   items: [
-  //     { id: 1, name: "Product 1", quantity: 2, price: 100.0 },
-  //     { id: 2, name: "Product 2", quantity: 1, price: 50.0 },
-  //     { id: 3, name: "Product 3", quantity: 3, price: 30.0 },
-  //   ],
-  // };
 
   async function getTransaction() {
     // const axios = require('axios');
@@ -121,6 +106,7 @@ const TransactionDetail = () => {
   });
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting2, setIsSubmitting2] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -131,6 +117,37 @@ const TransactionDetail = () => {
     setOrderStatus(e.target.value);
     if (e.target.value !== "Created") {
       setShowForm(true);
+    }
+  };
+
+  const onWhatsappShipping = async () => {
+    try {
+      // console.log(tid);
+      setIsSubmitting(true);
+
+      const resp = await axios
+        .get(`http://localhost:5000/api/sendShipping/${tid}`)
+        .then((r) => {
+          setIsSubmitting(false);
+          setAlert({ message: "Message Sent Successfully", type: "success" }); // Setting success message
+          const timer = setTimeout(() => {
+            setAlert({});
+          }, 3000); // Clearing alert after
+          // return resp.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          setIsSubmitting(false);
+          setAlert({
+            message: "Something went wrong : " + err?.response?.data?.error,
+            type: "error",
+          }); // Setting error message
+          const timer = setTimeout(() => {
+            setAlert({});
+          }, 3000); // Clearing alert after
+        });
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -145,13 +162,13 @@ const TransactionDetail = () => {
 
     setFormErrors(errors);
     if (Object.keys(errors).length === 0) {
-      setIsSubmitting(true);
+      setIsSubmitting2(true);
       formValues.tid = tid;
       saveShipping(formValues).then(() => {
         console.log("saved ");
         setSave(true);
       });
-      setIsSubmitting(false);
+      setIsSubmitting2(false);
     }
   };
 
@@ -172,14 +189,32 @@ const TransactionDetail = () => {
     }
   }
 
+  async function sendReceipt() {
+    try {
+      console.log(tid);
+      const resp = await axios.get(
+        `http://localhost:5000/api/sendReceipt/${tid}`
+      );
+      return resp.data;
+    } catch (error) {
+      console.log(error);
+      setAlert({
+        message: "Something went wrong." + error.response.data.error,
+        type: "error",
+      }); // Setting success message
+      const timer = setTimeout(() => {
+        setAlert({});
+      }, 3000); // Clearing alert after
+    }
+  }
+
   async function getPreference() {
     try {
       console.log(id);
       const resp = await axios.get(
         `http://localhost:5000/api/getPreference/${id.id}`
       );
-      return resp.data
-      
+      return resp.data;
     } catch (error) {
       console.log(error);
     }
@@ -209,7 +244,7 @@ const TransactionDetail = () => {
     }
   }
 
-  async function onDelete(){
+  async function onDelete() {
     try {
       const resp = await axios.delete(
         `http://localhost:5000/api/deleteShipping/${tid}`
@@ -218,14 +253,13 @@ const TransactionDetail = () => {
         message: "Shipping data deleted successfully",
         type: "success",
       }); // Setting success message
-      setShowForm(false)
+      setShowForm(false);
       const timer = setTimeout(() => {
         setAlert({});
-        handleGoBack()
-        
+        handleGoBack();
       }, 3000); // Clearing alert after
       console.log(alert);
-      
+
       // return resp.data;
     } catch (error) {
       console.log(error);
@@ -233,7 +267,7 @@ const TransactionDetail = () => {
       const timer = setTimeout(() => {
         setAlert({});
       }, 3000); // Clearing alert after
-    }    
+    }
   }
 
   const handlePrint = (id) => {
@@ -253,8 +287,49 @@ const TransactionDetail = () => {
     });
   };
 
+  const handleWhatsapp = (id) => {
+    setIsSubmitting(true);
+    console.log(id);
+    sendReceipt()
+      .then((d) => {
+        // console.log(d);
+        setAlert({
+          message: "Message Sent Successfully",
+          type: "success",
+        }); // Setting success message
+        const timer = setTimeout(() => {
+          setAlert({});
+          // handleGoBack()
+        }, 2000); // Clearing alert after
+        setIsSubmitting(false);
+      })
+      .catch((e) => {
+        setAlert({
+          message: "Something Went Wrong",
+          type: "error",
+        }); // Setting success message
+        const timer = setTimeout(() => {
+          setAlert({});
+          // handleGoBack()
+        }, 2000); // Clearing alert after
+        setIsSubmitting(false);
+      });
+  };
+
   return (
     <Box p="4" bg="white" borderRadius="lg">
+      {isSubmitting && (
+        <Spinner
+          size="xl"
+          thickness="6px"
+          color="blue.500"
+          zIndex="modal"
+          position="fixed"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+        />
+      )}
       <Text
         fontSize="1.5rem"
         background="transparent"
@@ -278,6 +353,12 @@ const TransactionDetail = () => {
               isLoading={isSubmitting}
               onClick={handlePrint}
             />
+            <IconButton
+              as={MdWhatsapp}
+              boxSize={6}
+              isLoading={isSubmitting}
+              onClick={handleWhatsapp}
+            />
           </Flex>
           <Text>
             <strong>Transaction ID:</strong> {transactionData.id}
@@ -289,7 +370,7 @@ const TransactionDetail = () => {
 
           <Table variant="striped" colorScheme="gray">
             <Thead>
-              <Tr bgColor={'gray.300'}>
+              <Tr bgColor={"gray.300"}>
                 <Th>Product</Th>
                 <Th>Quantity</Th>
                 <Th>Price</Th>
@@ -303,7 +384,18 @@ const TransactionDetail = () => {
                   <Td>{item.name}</Td>
                   <Td>{item.quantity}</Td>
                   <Td>₹ {item.price.toFixed(2)}</Td>
-                  <Td>₹ {item.gst.toFixed(2)}</Td>
+                  <Td>
+                    ₹ {item.gst.toFixed(2)}
+                    &nbsp;&nbsp;
+                    <strong>
+                      (
+                      {(
+                        (Number(item.gst) * 100) /
+                        (Number(item.quantity) * Number(item.price))
+                      ).toFixed(2)}{" "}
+                      %)
+                    </strong>
+                  </Td>
                   <Td>₹ {item.total.toFixed(2)}</Td>
                 </Tr>
               ))}
@@ -400,8 +492,9 @@ const TransactionDetail = () => {
                     mt={4}
                     colorScheme="green"
                     // isLoading={isSubmitting}
-
+                    disabled={!save}
                     type="button"
+                    onClick={() => onWhatsappShipping()}
                   >
                     <em className="bi bi-whatsapp"></em>
                   </Button>
@@ -409,6 +502,7 @@ const TransactionDetail = () => {
                     mt={4}
                     colorScheme="red"
                     // isLoading={isSubmitting}
+                    disabled={!save}
                     type="button"
                     onClick={onDelete}
                   >
@@ -417,7 +511,7 @@ const TransactionDetail = () => {
                   <Button
                     mt={4}
                     colorScheme="teal"
-                    isLoading={isSubmitting}
+                    isLoading={isSubmitting2}
                     type="submit"
                     disabled={save}
                   >

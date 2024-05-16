@@ -13,20 +13,18 @@ import {
 } from "@chakra-ui/react";
 import { useHistory, useLocation } from "react-router-dom";
 import { ArrowBackIcon } from "@chakra-ui/icons";
-import axios, * as others from 'axios';
+import axios, * as others from "axios";
 
 const TransactionForm = () => {
-
   useEffect(() => {
-    getProducts().then(()=>{})
-    getBillNo().then((d)=>{
-      setFormData({...formData, billNo: d.billNo});
-    })
-    
-  }, [])
+    getProducts().then(() => {});
+    getBillNo().then((d) => {
+      setFormData({ ...formData, billNo: d.billNo });
+    });
+  }, []);
 
   let initialData = {
-    customerId:-1,
+    customerId: -1,
     billNo: "",
     remark: "", // Add the remark field
     orderDate: "",
@@ -35,12 +33,13 @@ const TransactionForm = () => {
         productName: "",
         qty: "",
         rate: "",
-        gst:"",
+        gstRate: "",
+        customGst: "",
       },
     ],
-  }
+  };
 
-  const [products, setProducts] = useState([])
+  const [products, setProducts] = useState([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,53 +47,66 @@ const TransactionForm = () => {
 
   async function getProducts() {
     try {
-        const response = await axios.get('http://localhost:5000/api/getAllProductType');
-        // console.log(response.data);
-        const d = response.data
-        // console.log(d);
-        // setCustomerData(d)
-        setProducts(d)
-        // console.log(currentCustomer,id);
-
-        
-        // setIsSubmitting(false);
-    } catch (error) {
-        console.error('Error adding customer:', error);
-        // setError('Oops! Something went wrong. Please try again later.');
-        // setIsSubmitting(false);
-    }
-}
-async function getBillNo() {
-  try {
-      const response = await axios.get('http://localhost:5000/api/getBillNo');
+      const response = await axios.get(
+        "http://localhost:5000/api/getAllProductType"
+      );
       // console.log(response.data);
-      const d = response.data
-      return d
-  } catch (error) {
-      console.error('Error getting Billno:', error);
+      const d = response.data;
+      // console.log(d);
+      // setCustomerData(d)
+      setProducts(d);
+      // console.log(currentCustomer,id);
+
+      // setIsSubmitting(false);
+    } catch (error) {
+      console.error("Error adding customer:", error);
       // setError('Oops! Something went wrong. Please try again later.');
       // setIsSubmitting(false);
+    }
   }
-}
+  async function getBillNo() {
+    try {
+      const response = await axios.get("http://localhost:5000/api/getBillNo");
+      // console.log(response.data);
+      const d = response.data;
+      return d;
+    } catch (error) {
+      console.error("Error getting Billno:", error);
+      // setError('Oops! Something went wrong. Please try again later.');
+      // setIsSubmitting(false);
+    }
+  }
 
-
-async function addOrder(order) {
-  try {
-      const response = await axios.post('http://localhost:5000/api/addOrder',order);
-      console.log('Order added successfully:', response.data);
-      setAlert({ message: "Form submitted successfully! Redirecting to home ...", type: "success" }); // Setting success message
-      const  timer = setTimeout(() => {setAlert({});handleGoBack();}, 2000); // Clearing alert after
+  async function addOrder(order) {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/addOrder",
+        order
+      );
+      console.log("Order added successfully:", response.data);
+      setAlert({
+        message: "Form submitted successfully! Redirecting to home ...",
+        type: "success",
+      }); // Setting success message
+      const timer = setTimeout(() => {
+        setAlert({});
+        handleGoBack();
+      }, 2000); // Clearing alert after
       setIsSubmitting(false);
 
-      
       // setIsSubmitting(false);
-  } catch (error) {
-    console.error('Error adding Order:', error);
-    setAlert({ message: error.message +' '+ error.response.data, type: "error" }); // Setting success message
-    const  timer = setTimeout(() => {setAlert({});}, 3000); // Clearing alert after
-    setIsSubmitting(false);
+    } catch (error) {
+      console.error("Error adding Order:", error);
+      setAlert({
+        message: error.message + " " + error.response.data,
+        type: "error",
+      }); // Setting success message
+      const timer = setTimeout(() => {
+        setAlert({});
+      }, 3000); // Clearing alert after
+      setIsSubmitting(false);
+    }
   }
-}
 
   const history = useHistory();
   const location = useLocation();
@@ -106,7 +118,7 @@ async function addOrder(order) {
     billNo: "",
     remark: "", // Add remark field to errors state
     orderDate: "",
-    details: [{ productName: "", qty: "", rate: "", gst:"" }],
+    details: [{ productName: "", qty: "", rate: "", gst: "" }],
   });
 
   const handleChange = (e, index) => {
@@ -177,23 +189,36 @@ async function addOrder(order) {
 
     if (formValid) {
       // Handle form submission here
-      formData.customerId = id
-      const order = formData
-      console.log(formData);
+      formData.customerId = id;
+      const det = formData.details.map((d) => {
+        const g = isNaN(d.gstRate)?d.customGst:d.gstRate
+        return {
+          productName: Number(d.productName),
+          qty: Number(d.qty),
+          rate: Number(d.rate),
+          gst : Number(d.qty) * (Number(d.rate) * (Number(g)/100))
+        };
+      });
+
+      const order = formData;
+      order.details = det;
       setFormData({
         billNo: "",
         remark: "", // Reset remark field
         orderDate: "",
-        details: [{ productName: "", qty: "", rate: "", gst:"" }],
+        details: [
+          { productName: "", qty: "", rate: "", gstRate: "", customGst: "" },
+        ],
       });
       setErrors({
         billNo: "",
         remark: "", // Reset remark field
         orderDate: "",
-        details: [{ productName: "", qty: "", rate: "", gst:"" }],
+        details: [
+          { productName: "", qty: "", rate: "", gstRate: "", customGst: "" },
+        ],
       });
-      // handleGoBack();
-      addOrder(order)
+      addOrder(order);
     }
   };
 
@@ -207,11 +232,17 @@ async function addOrder(order) {
   const handleAddDetail = () => {
     setFormData({
       ...formData,
-      details: [...formData.details, { productName: "", qty: "", rate: "", gst:""}],
+      details: [
+        ...formData.details,
+        { productName: "", qty: "", rate: "", gstRate: "", customGst: "" },
+      ],
     });
     setErrors({
       ...errors,
-      details: [...errors.details, { productName: "", qty: "", rate: "", gst:"" }],
+      details: [
+        ...errors.details,
+        { productName: "", qty: "", rate: "", gst: "" },
+      ],
     });
   };
 
@@ -230,10 +261,12 @@ async function addOrder(order) {
     });
   };
 
-  const calcTotal = (qty, rate, gst)=>{
-    let total =  Number(qty)*Number(rate)+Number(gst)
-    return total
-  }
+  const calcTotal = (qty, rate, gst, cust) => {
+    let g = isNaN(gst) ? Number(cust) : Number(gst);
+    let totalWithTax = Number(rate) * (1 + Number(g) / 100);
+    let total = totalWithTax * Number(qty);
+    return total.toPrecision(String(Math.round(total)).length + 2);
+  };
 
   return (
     <Box borderWidth="1px" borderRadius="lg" p="4" bg="white">
@@ -273,6 +306,7 @@ async function addOrder(order) {
                   setFormData({ ...formData, billNo: e.target.value })
                 }
                 borderColor={errors.billNo ? "red.500" : "gray.400"}
+                placeholder="Enter Bill Number"
               />
               {errors.billNo && <Text textColor={"red"}>{errors.billNo}</Text>}
             </FormControl>
@@ -293,6 +327,7 @@ async function addOrder(order) {
                   setFormData({ ...formData, orderDate: e.target.value })
                 }
                 borderColor={errors.orderDate ? "red.500" : "gray.400"}
+                placeholder="Select Order Date"
               />
               {errors.orderDate && (
                 <Text textColor={"red"}>{errors.orderDate}</Text>
@@ -316,6 +351,7 @@ async function addOrder(order) {
                 setFormData({ ...formData, remark: e.target.value })
               }
               borderColor={errors.remark ? "red.500" : "gray.400"}
+              placeholder="Add a remark"
             />
             {errors.remark && <Text textColor={"red"}>{errors.remark}</Text>}
           </FormControl>
@@ -343,8 +379,9 @@ async function addOrder(order) {
                       ? "red.500"
                       : "gray.400"
                   }
+                  placeholder="Choose a product"
                 >
-                  <option value="">Select Product</option>
+                  {/* <option value="">Select Product</option> */}
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
                       {product.name}
@@ -370,6 +407,7 @@ async function addOrder(order) {
                       ? "red.500"
                       : "gray.400"
                   }
+                  placeholder="Enter quantity"
                 />
               </FormControl>
 
@@ -390,10 +428,11 @@ async function addOrder(order) {
                       ? "red.500"
                       : "gray.400"
                   }
+                  placeholder="Enter rate per unit"
                 />
               </FormControl>
 
-              <FormControl flex="1">
+              {/* <FormControl flex="1">
                 <FormLabel>
                   <Text textColor={"red"} display={"inline"}>
                     *
@@ -410,7 +449,58 @@ async function addOrder(order) {
                       ? "red.500"
                       : "gray.400"
                   }
+                  placeholder="Enter GST rate"
                 />
+              </FormControl> */}
+
+              <FormControl flex="1">
+                <FormLabel>
+                  <Text textColor={"red"} display={"inline"}>
+                    *
+                  </Text>{" "}
+                  GST Rate
+                </FormLabel>
+                <Stack display="flex" direction="row">
+                  <Select
+                    width="60%"
+                    name="gstRate"
+                    value={detail.gstRate}
+                    onChange={(e) => {
+                      const newDetails = [...formData.details];
+                      newDetails[index].gstRate = e.target.value;
+                      newDetails[index].customGst =
+                        e.target.value === "custom" ? "" : undefined;
+                      setFormData({ ...formData, details: newDetails });
+                    }}
+                    borderColor={
+                      errors.details[index] && errors.details[index].gst
+                        ? "red.500"
+                        : "gray.400"
+                    }
+                  >
+                    <option defaultValue="0" selected>
+                      Select gst rate
+                    </option>
+                    <option value="2.5">2.5%</option>
+                    <option value="5">5%</option>
+                    <option value="custom">Custom</option>
+                  </Select>
+                  {detail.gstRate === "custom" && (
+                    <Input
+                      type="number"
+                      name="customGst"
+                      placeholder="Enter custom GST rate"
+                      value={detail.customGst || ""}
+                      onChange={(e) => {
+                        const newDetails = [...formData.details];
+                        newDetails[index].customGst = e.target.value;
+                        setFormData({ ...formData, details: newDetails });
+                      }}
+                      borderColor="gray.400"
+                      width="40%" // Ensuring the width matches the select width
+                    />
+                  )}
+                </Stack>
               </FormControl>
 
               <FormControl flex="1">
@@ -418,7 +508,12 @@ async function addOrder(order) {
                 <Input
                   type="text"
                   name="total"
-                  value={calcTotal(detail.qty, detail.rate, detail.gst)}
+                  value={calcTotal(
+                    detail.qty,
+                    detail.rate,
+                    detail.gstRate,
+                    detail.customGst
+                  )}
                   readOnly
                 />
               </FormControl>
@@ -472,6 +567,7 @@ async function addOrder(order) {
           </Button>
         </Stack>
       </form>
+
       {alert.message && (
         <Alert status={alert.type} mt="4">
           <AlertIcon />

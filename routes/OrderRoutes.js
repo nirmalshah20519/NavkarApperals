@@ -32,8 +32,11 @@ router.get('/getLedger/:id', OrderController.getLedger)
 // order detail router
 router.get("/getTransactionDetail/:id", OrderController.getTransactionDetail); 
 router.get("/getReceipt/:id", OrderController.getReceipt); 
+router.get("/sendReceipt/:id", OrderController.sendReceipt); 
+router.get("/sendShipping/:tid", OrderController.sendShipping); 
 router.get("/getBillNo", OrderController.getBillNo); 
 router.get("/printLedger/:id", OrderController.printLedger); 
+router.get("/sendLedger/:id", OrderController.sendLedger); 
 
 
 
@@ -42,6 +45,6 @@ router.post("/addShipping", OrderController.addShipping);
 router.delete("/deleteShipping/:tid", OrderController.deleteShipping); 
 // router.post("/updateShippingIdInOrder", OrderController.updateShippingIdInOrder); 
 
-router.get('/send', OrderController.send)
+router.post('/send2', OrderController.send2)
 
 module.exports = router;

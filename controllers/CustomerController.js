@@ -244,7 +244,7 @@ const getRequiredDataCustomersById = async (req, res) => {
       order: [["orderDate", "DESC"]],
       include: Shipping,
     });
-    console.log(transactions);
+    // console.log(transactions);
 
     const payments = await Transaction.findAll({
       where: { customerId: customerId },
@@ -260,7 +260,9 @@ const getRequiredDataCustomersById = async (req, res) => {
       billNo: transaction.BillNo,
       shippingId: transaction.Shipping ? transaction.Shipping.TrackingNo : "",
     }));
-    console.log(transformedTransactions);
+    // console.log(transformedTransactions);
+
+    transformedTransactions.sort((a,b)=>b.datetime-a.datetime)
 
     // Construct full name
     const name = `${customer.firstname} ${customer.lastname}`;
@@ -316,6 +318,8 @@ const getRequiredDataCustomersById = async (req, res) => {
     }));
 
     const resp = [...mappedTransactions1, ...mappedTransactions2];
+
+    resp.sort((a,b)=>b.date-a.date)
 
     // Ensure all values are defined before sending in the response
     const responseData = {
