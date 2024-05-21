@@ -625,7 +625,7 @@ const sendReceipt = async (req, res) => {
         .toString()
         .padStart(2, "0")}`;
 
-      const baseDir = "D:/Projects/NvkrPdfs";
+      const baseDir = "F:/ledgers";
 
       const safeName = name.replace(/[^a-zA-Z0-9]/g, "_"); // Sanitize name to be filesystem safe
       const fileName = `${safeName}_${dateString}_${timeString}.pdf`;
@@ -655,7 +655,7 @@ const sendReceipt = async (req, res) => {
       const fileKey = arr[arr.length - 1];
       const publicUrl = await aws.uploadFileToS3(bucketName, fileKey, filePath);
 
-      const message =`Jai Shree Ram🙏,\n\nPlease find the invoice PDF file with the bill number *${billNo}* attached.\n\nThank you for choosing us for your purchase! 💼,\n*NAVKAR APPARELS*`;
+      const message =`Jai Jinendra🙏,\n\nPlease find the invoice PDF file with the bill number *${billNo}* attached.\n\nThank you for choosing us for your purchase! 💼,\n*NAVKAR APPARELS*`;
 
       aws.sendWhatsapp(message, contactWh, publicUrl).then((r) => {
         // console.log(r);
@@ -788,7 +788,7 @@ const getLedger = async (req, res) => {
     const resp = [...mappedTransactions1, ...mappedTransactions2];
     debugger;    
 
-    resp.sort((a, b) => new Date(a.date) - new Date(b.date));
+    //resp.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     res.status(200).send([]);
   } catch (error) {
@@ -846,7 +846,7 @@ const printLedger = async (req, res) => {
 
   const resp = [...mappedTransactions1, ...mappedTransactions2];
 
-  resp.sort((a, b) => b.date - a.date);
+  //resp.sort((a, b) => b.date - a.date);
 
   let credit = 0;
   let debit = 0;
@@ -901,38 +901,38 @@ const printLedger = async (req, res) => {
       .replace("##ledgerdetail##", htmlTxt);
 
     // Format date and time for the file name
-    const date = new Date();
-    const dateString = `d${date.getFullYear()}-${(date.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
-    const timeString = `t${date.getHours().toString().padStart(2, "0")}_${date
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
+    // const date = new Date();
+    // const dateString = `d${date.getFullYear()}-${(date.getMonth() + 1)
+    //   .toString()
+    //   .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+    // const timeString = `t${date.getHours().toString().padStart(2, "0")}_${date
+    //   .getMinutes()
+    //   .toString()
+    //   .padStart(2, "0")}`;
 
-    const baseDir = "D:/Projects/NvkrPdfs";
+    // const baseDir = "D:/Projects/NvkrPdfs";
 
-    const safeName = name.replace(/[^a-zA-Z0-9]/g, "_"); // Sanitize name to be filesystem safe
-    const fileName = `${safeName}_${dateString}_${timeString}.pdf`;
-    const pdfPath = path.join(baseDir, fileName);
+    // const safeName = name.replace(/[^a-zA-Z0-9]/g, "_"); // Sanitize name to be filesystem safe
+    // const fileName = `${safeName}_${dateString}_${timeString}.pdf`;
+    // const pdfPath = path.join(baseDir, fileName);
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setContent(data);
-    // await page.goto(data, {waitUntil: 'networkidle0'});
-    await page.pdf({
-      path: pdfPath,
-      format: "A4",
-      printBackground: true,
-      margin: {
-        top: "15mm",
-        right: "15mm",
-        bottom: "15mm",
-        left: "15mm",
-      },
-    });
+    // const browser = await puppeteer.launch();
+    // const page = await browser.newPage();
+    // await page.setContent(data);
+    // // await page.goto(data, {waitUntil: 'networkidle0'});
+    // await page.pdf({
+    //   path: pdfPath,
+    //   format: "A4",
+    //   printBackground: true,
+    //   margin: {
+    //     top: "15mm",
+    //     right: "15mm",
+    //     bottom: "15mm",
+    //     left: "15mm",
+    //   },
+    // });
 
-    await browser.close();
+    //await browser.close();
     // Optionally send the PDF file directly to the client:
     res.status(200).send(data);
   } catch (error) {
@@ -988,7 +988,7 @@ const sendLedger = async (req, res) => {
 
   const resp = [...mappedTransactions1, ...mappedTransactions2];
 
-  resp.sort((a, b) => b.date - a.date);
+  //resp.sort((a, b) => b.date - a.date);
 
   let credit = 0;
   let debit = 0;
@@ -1048,15 +1048,15 @@ const sendLedger = async (req, res) => {
     const dateString = `d${date.getFullYear()}-${(date.getMonth() + 1)
       .toString()
       .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
-    const timeString = `t${date.getHours().toString().padStart(2, "0")}_${date
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
+    // const timeString = `t${date.getHours().toString().padStart(2, "0")}_${date
+    //   .getMinutes()
+    //   .toString()
+    //   .padStart(2, "0")}`;
 
-    const baseDir = "D:/Projects/NvkrPdfs";
+    const baseDir = "F:/ledgers";
 
     const safeName = name.replace(/[^a-zA-Z0-9]/g, "_"); // Sanitize name to be filesystem safe
-    const fileName = `${safeName}_${dateString}_${timeString}.pdf`;
+    const fileName = `${safeName}_${dateString}.pdf`;
     const pdfPath = path.join(baseDir, fileName);
 
     const browser = await puppeteer.launch();
@@ -1084,7 +1084,7 @@ const sendLedger = async (req, res) => {
       const fileKey = arr[arr.length - 1];
       const publicUrl = await aws.uploadFileToS3(bucketName, fileKey, fp);
 
-      const message =`Jai Shree Ram🙏,\n\nPlease find the Monthly Ledger file attached.\n\nThank you for choosing us for your purchase! 💼,\n*NAVKAR APPARELS*`;
+      const message =`Jai Jinendra🙏,\n\nPlease find the Ledger file attached.\n\nThank you for choosing us for your purchase! 💼,\n*NAVKAR APPARELS*`;
 
       aws.sendWhatsapp(message, contactWh, publicUrl).then((r) => {
         // console.log(r);
@@ -1120,9 +1120,9 @@ const sendShipping = async (req, res) => {
   const shipDate = shipping.ShippingDate;
   const TrackingNo = shipping.TrackingNo;
 
-  const message = `Jai Shree Ram!🙏\nyour order has been shipped!\n
+  const message = `Jai Jinendra!🙏\nyour order has been shipped!\n
 🚚 Logistic Name: *${logName}*\n
-📅 Shipping Date: *${shipDate}*\n
+📅 Shipping Date: *${new Date(shipDate).toDateString()}*\n
 🔍 Tracking Number: *${TrackingNo}*\n
 Kindly Contact me for any help. ( +917046094496 ). \n*NAVKAR APPARELS* 🎉`;
 
