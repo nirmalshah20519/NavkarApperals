@@ -1,27 +1,3 @@
-/*!
-  _   _  ___  ____  ___ ________  _   _   _   _ ___   
- | | | |/ _ \|  _ \|_ _|__  / _ \| \ | | | | | |_ _| 
- | |_| | | | | |_) || |  / / | | |  \| | | | | || | 
- |  _  | |_| |  _ < | | / /| |_| | |\  | | |_| || |
- |_| |_|\___/|_| \_\___/____\___/|_| \_|  \___/|___|
-                                                                                                                                                                                                                                                                                                                                       
-=========================================================
-* Horizon UI - v1.1.0
-=========================================================
-
-* Product Page: https://www.horizon-ui.com/
-* Copyright 2023 Horizon UI (https://www.horizon-ui.com/)
-
-* Designed and Coded by Simmmple
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-
-// Chakra imports
-
 import {
   Box,
   Button,
@@ -42,22 +18,15 @@ import {
   Tab,
   TabPanel,
   Spinner,
+  CircularProgress,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
-
-// Custom components
 import Banner from "views/admin/profile/components/Banner";
 import General from "views/admin/profile/components/General";
-import Notifications from "views/admin/profile/components/Notifications";
-import Projects from "views/admin/profile/components/Projects";
-import Storage from "views/admin/profile/components/Storage";
-import Upload from "views/admin/profile/components/Upload";
-import { ArrowBackIcon } from "@chakra-ui/icons";
-import { useHistory, useLocation } from "react-router-dom";
-// import  customerDetails  from 'views/admin/profile/variables/CustomerDetail.json';
-import BillDetails from "views/admin/profile/variables/BillDetails.json";
-
-// Assets
+import ColumnsTable from "views/admin/profile/components/ColumnsTable";
+import axios from "axios";
+import ColumnsTablePayments from "./components/ColumnsTablePayments";
+import ColumnsTableLedger from "./components/ColumnsTableLedger";
 import avatar from "assets/img/avatars/customer.jpg";
 import banner from "assets/img/auth/banner.png";
 import React, { useEffect, useState } from "react";
@@ -66,47 +35,34 @@ import {
   columnsDataPayments,
   columnsDataTransactions,
 } from "./variables/ColumnData";
-import ColumnsTable from "views/admin/profile/components/ColumnsTable";
-import axios, * as others from "axios";
-import ColumnsTablePayments from "./components/ColumnsTablePayments";
-import ColumnsTableLedger from "./components/ColumnsTableLedger";
+import { useHistory, useLocation } from "react-router-dom";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 
 export default function Overview() {
-  // console.log(customerDetails);
-  // console.log(customerDetails);
-  // console.log("HERERERERE");
-
   const [customerData, setCustomerData] = useState([]);
   const [customerPaymentData, setCustomerPaymentData] = useState([]);
   const [customer, setCustomer] = useState({});
-
   const [orderTotal, setOrderTotal] = useState(0);
   const [paymentsTotal, setPaymentsTotal] = useState(0);
-
   const [alert, setAlert] = useState({ message: "", type: "" });
-
   const [error, setError] = useState(null);
-
   const [isLoading, setIsLoading] = useState(false);
   const [isLoading2, setIsLoading2] = useState(false);
+  const [globalLoading, setGlobalLoading] = useState(false);
 
   useEffect(() => {
+    setGlobalLoading(true);
     getCustomers().then((d) => {
-      // console.log("loaded..",d);
       setOrderTotal(0);
       d.transactions.forEach((e) => setOrderTotal((o) => o + Number(e.amount)));
-      // console.log(orderTotal);
-
+      // setGlobalLoading(false);
       setPaymentsTotal(0);
       d.payments.forEach((e) => setPaymentsTotal((o) => o + Number(e.Amount)));
-      // console.log(paymentsTotal);
+      setGlobalLoading(false);
     });
   }, []);
 
   async function getCustomers() {
-    // const axios = require('axios');
-    // setIsSubmitting(true);
-
     try {
       const response = await axios.get(
         `http://localhost:5000/api/getRequiredDataCustomersById/${id}`
@@ -122,22 +78,10 @@ export default function Overview() {
   const textColor = useColorModeValue("secondaryGray.900", "white");
 
   const location = useLocation();
-  // debugger;
-  // console.log("yyyy");
-  // console.log(location.state);
-
-  // const {id } = location.state;
   const { id } = useParams();
-  // console.log("id",id);
-  // const {id} = {id:1};
-  // console.log(id);
-  // console.log(customerDetails);
-
-  // console.log(someProp, id);
   const history = useHistory();
 
   const handleAddTransaction = () => {
-    // console.log(id);
     history.push({
       pathname: `/admin/customers/profile/${customer.id}/addTransaction`,
       state: { id: customer.id },
@@ -161,7 +105,6 @@ export default function Overview() {
   const handleGoBack = () => {
     history.push({
       pathname: `/admin/customers/`,
-      // state: { id: currentCustomer.id }
     });
   };
 
@@ -174,154 +117,116 @@ export default function Overview() {
   const cancelRef = React.useRef();
 
   async function deleteOrder(id) {
-    // const axios = require('axios');
-    // setIsSubmitting(true);
-
     try {
       const response = await axios.delete(
         `http://localhost:5000/api/deleteOrder/${id}`
       );
-      // console.log(response.data);
-      setAlert({ message: "order deleted successfully!", type: "success" }); // Setting success message
-      const timer = setTimeout(() => {
+      setAlert({ message: "order deleted successfully!", type: "success" });
+      setTimeout(() => {
         setAlert({});
-      }, 2500); // Clearing alert after
-
-      // setIsSubmitting(false);
+      }, 2500);
     } catch (error) {
       setError("Oops! Something went wrong. Please try again later.");
-      // setIsSubmitting(false);
-      setAlert({ message: error.message, type: "error" }); // Setting success message
-      const timer = setTimeout(() => {
+      setAlert({ message: error.message, type: "error" });
+      setTimeout(() => {
         setAlert({});
-      }, 3000); // Clearing alert after
+      }, 3000);
     }
   }
 
   async function deletePayment(id) {
-    // const axios = require('axios');
-    // setIsSubmitting(true);
-
     try {
       const response = await axios.delete(
         `http://localhost:5000/api/deleteTransaction/${id}`
       );
-      // console.log(response.data);
       setAlert({
         message: "Transaction deleted successfully!",
         type: "success",
-      }); // Setting success message
-      const timer = setTimeout(() => {
+      });
+      setTimeout(() => {
         setAlert({});
-      }, 2500); // Clearing alert after
+      }, 2500);
       getCustomers().then(() => {
         console.log("donr");
       });
-
-      // setIsSubmitting(false);
     } catch (error) {
       setError("Oops! Something went wrong. Please try again later.");
-      // setIsSubmitting(false);
-      setAlert({ message: error.message, type: "error" }); // Setting success message
-      const timer = setTimeout(() => {
+      setAlert({ message: error.message, type: "error" });
+      setTimeout(() => {
         setAlert({});
-      }, 3000); // Clearing alert after
+      }, 3000);
     }
   }
 
   const handleDelClick = (id) => {
     setOrdId(id);
-    console.log(id);
-
     setIsOpen(true);
   };
 
   const handlePayDelClick = (id) => {
-    console.log(id);
     setpyId(id);
     setPyIsOpen(true);
   };
 
   const handleDeleteConfirmed = () => {
-    console.log(ordId);
-    // Perform deletion logic here
     deleteOrder(ordId).then(() => {
-      console.log("Order deleted!");
       getCustomers().then(() => {
         console.log("");
       });
     });
     setOrdId(-1);
-    onClose(); // Close the confirmation dialog
+    onClose();
   };
 
   async function getLedger() {
-    // const axios = require('axios');
-    // setIsSubmitting(true);
-    console.log(id);
-
     try {
       const response = await axios.get(
         `http://localhost:5000/api/printLedger/${id}`
       );
       return response.data;
-
-      // setIsSubmitting(false);
     } catch (error) {
       setError("Oops! Something went wrong. Please try again later.");
-      // setIsSubmitting(false);
-      setAlert({ message: error.message, type: "error" }); // Setting success message
-      const timer = setTimeout(() => {
+      setAlert({ message: error.message, type: "error" });
+      setTimeout(() => {
         setAlert({});
-      }, 3000); // Clearing alert after
+      }, 3000);
     }
   }
 
   async function whatsappLedger() {
-    // const axios = require('axios');
-    // setIsSubmitting(true);
-    console.log('idddd');
-    console.log(id);
-
-    setIsLoading2(true)
+    setIsLoading2(true);
 
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/sendLedger/${id}`
-      ).then(resp=>{
-        console.log(resp);
-        setIsLoading2(false)
-        setAlert({ message: "Message sent successfully", type: "success" }); // Setting success message
-        const timer = setTimeout(() => {
-          setAlert({});
-        }, 3000); // Clearing alert after
-      })
-      .catch(err=>{
-        console.log(err);
-        setIsLoading2(false)
-        setAlert({ message: 'Error Sending Message', type: "error" }); // Setting success message
-        const timer = setTimeout(() => {
-          setAlert({});
-        }, 3000); // Clearing alert after
-      });
-      // return response.data;
-
-      // setIsSubmitting(false);
+      await axios
+        .get(`http://localhost:5000/api/sendLedger/${id}`)
+        .then((resp) => {
+          setIsLoading2(false);
+          setAlert({ message: "Message sent successfully", type: "success" });
+          setTimeout(() => {
+            setAlert({});
+          }, 3000);
+        })
+        .catch((err) => {
+          setIsLoading2(false);
+          setAlert({ message: "Error Sending Message", type: "error" });
+          setTimeout(() => {
+            setAlert({});
+          }, 3000);
+        });
     } catch (error) {
       console.log(error);
     }
   }
 
   const handlePrint = () => {
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
     getLedger().then((d) => {
-      // console.log(d);
-      setIsLoading(false); // Start loading
+      setIsLoading(false);
       const printWindow = window.open("", "_blank");
       printWindow.document.open();
-      printWindow.document.write(d); // Assuming d contains the HTML content you want to print
+      printWindow.document.write(d);
       printWindow.document.close();
-      const time = setTimeout(() => {
+      setTimeout(() => {
         printWindow.print();
       }, 50);
     });
@@ -340,15 +245,10 @@ export default function Overview() {
   };
 
   const formatIndianCurrency = (num) => {
-    // Convert number to string and fix to two decimal places
     let strNum = num.toFixed(2).toString();
-
-    // Separate integer part from decimal part
     let parts = strNum.split(".");
     let integerPart = parts[0];
-    let decimalPart = parts.length > 1 ? "." + parts[1] : ".00"; // Ensure there are always two decimal digits
-
-    // Add commas to integer part
+    let decimalPart = parts.length > 1 ? "." + parts[1] : ".00";
     let formattedIntegerPart = "";
     for (let i = integerPart.length - 1, j = 0; i >= 0; i--, j++) {
       if (j > 0 && j % 3 === 0) {
@@ -356,335 +256,280 @@ export default function Overview() {
       }
       formattedIntegerPart = integerPart[i] + formattedIntegerPart;
     }
-
-    // Return the formatted number
     return "₹ " + formattedIntegerPart + decimalPart;
   };
 
-  // const orderTotal = customer.transactions
+  if(globalLoading){
+    return <Box
+    position="fixed"
+    top="0"
+    left="0"
+    width="100vw"
+    height="100vh"
+    display="flex"
+    alignItems="center"
+    justifyContent="center"
+    bg="rgba(255, 255, 255, 0.8)"
+    zIndex="9999"
+  >
+    <CircularProgress color="blue.500" />
+    <Text fontSize={"1.5rem"}
+            background={"transparent"}
+            cursor={"pointer"}
+            _hover={{ color: "blue" }}> Loading ...</Text>
+  </Box>
+  }
 
   return (
-    <Box>
-      {/* Main Fields */}
-
-      {/* Back Button    */}
-      <Text
-        fontSize={"1.5rem"}
-        background={"transparent"}
-        cursor={"pointer"}
-        _hover={{ color: "blue" }}
-        // variant="solid"
-        onClick={handleGoBack}
-      >
-        <ArrowBackIcon />
-      </Text>
-
-      <Flex
-        direction={{ base: "column", lg: "row" }}
-        justify="space-between"
-        align={{ base: "flex-start" }}
-        gap={{ base: "20px", lg: "20px" }}
-      >
-        <Banner
-          banner={banner}
-          avatar={avatar}
-          name={customer.name}
-          job={customer.type}
-          id={customer.id}
-        />
-        {/* {console.log(currentCustomer)} */}
-
-        <General
-          gridArea={{ base: "2 / 1 / 3 / 2", lg: "1 / 2 / 2 / 3" }}
-          // minH="250px"
-          pe="20px"
-          contact={customer.mobile}
-          address={customer.address}
-          email={customer.email}
-          gst={customer.GSTIN}
-          orderTotal={formatIndianCurrency(orderTotal)}
-          paymentsTotal={formatIndianCurrency(paymentsTotal)}
-          currentStatus={formatIndianCurrency(paymentsTotal - orderTotal)}
-          status={paymentsTotal - orderTotal > 0}
-        />
-
-        {/* <Storage
-    used={25.6}
-    total={50}
-  />
-  <Upload
-    minH={{ base: "auto", lg: "420px", "2xl": "365px" }}
-    pe='20px'
-    pb={{ base: "100px", lg: "20px" }}
-  /> */}
-      </Flex>
-
-      {/* <Grid
-        mb="20px"
-        templateColumns={{
-          base: "1fr",
-          lg: "repeat(2, 1fr)",
-          "2xl": "1.34fr 1.62fr 1fr",
-        }}
-        templateRows={{
-          base: "1fr",
-          lg: "repeat(2, 1fr)",
-          "2xl": "1fr",
-        }}
-        gap={{ base: "20px", xl: "20px" }}
-      >
-        <Projects
-          gridArea="1 / 2 / 2 / 2"
-          banner={banner}
-          avatar={avatar}
-          name="Adela Parkson"
-          job="Product Designer"
-          posts="17"
-          followers="9.7k"
-          following="274"
-        />
-        <General
-          gridArea={{ base: "2 / 1 / 3 / 2", lg: "1 / 2 / 2 / 3" }}
-          minH="365px"
-          pe="20px"
-        />
-        <Notifications
-          used={25.6}
-          total={50}
-          gridArea={{
-            base: "3 / 1 / 4 / 2",
-            lg: "2 / 1 / 3 / 3",
-            "2xl": "1 / 3 / 2 / 4",
-          }}
-        />
-      </Grid> */}
-
-      {/* Tab Pane for Orders and Transactions */}
-      {alert.message && (
-        <Alert status={alert.type} mt="4">
-          <AlertIcon />
-          {alert.message}
-        </Alert>
-      )}
-      <Tabs isFitted variant="enclosed">
-        <TabList mb="1em" bg={"white"}>
-          <Tab
-            _selected={{
-              bg: "blue.500",
-              color: "white",
-              borderColor: "blue.500",
-            }}
-            _hover={{ bg: "blue.400" }}
-            fontWeight="semibold"
+    <>
+    {/* {globalLoading && } */}
+      <Box>
+          <Text
+            fontSize={"1.5rem"}
+            background={"transparent"}
+            cursor={"pointer"}
+            _hover={{ color: "blue" }}
+            onClick={handleGoBack}
           >
-            Orders
-          </Tab>
-          <Tab
-            _selected={{
-              bg: "blue.500",
-              color: "white",
-              borderColor: "blue.500",
-            }}
-            _hover={{ bg: "blue.400" }}
-            fontWeight="semibold"
-          >
-            Transactions
-          </Tab>
-          <Tab
-            _selected={{
-              bg: "blue.500",
-              color: "white",
-              borderColor: "blue.500",
-            }}
-            _hover={{ bg: "blue.400" }}
-            fontWeight="semibold"
-          >
-            Ledger
-          </Tab>
-        </TabList>
+            <ArrowBackIcon />
+          </Text>
 
-        <TabPanels>
-          <TabPanel>
-            {/* Orders Content */}
-            <Flex
-              px="25px"
-              py={"16px"}
-              borderRadius={"16px"}
-              justify="space-between"
-              mb="20px"
-              align="center"
-              bg={"white"}
-            >
-              <Text
-                color={textColor}
-                fontSize="2rem"
-                fontWeight="700"
-                lineHeight="100%"
+          <Flex
+            direction={{ base: "column", lg: "row" }}
+            justify="space-between"
+            align={{ base: "flex-start" }}
+            gap={{ base: "20px", lg: "20px" }}
+          >
+            <Banner
+              banner={banner}
+              avatar={avatar}
+              name={customer.name}
+              job={customer.type}
+              id={customer.id}
+            />
+
+            <General
+              gridArea={{ base: "2 / 1 / 3 / 2", lg: "1 / 2 / 2 / 3" }}
+              pe="20px"
+              contact={customer.mobile}
+              address={customer.address}
+              email={customer.email}
+              gst={customer.GSTIN}
+              orderTotal={formatIndianCurrency(orderTotal)}
+              paymentsTotal={formatIndianCurrency(paymentsTotal)}
+              currentStatus={formatIndianCurrency(paymentsTotal - orderTotal)}
+              status={paymentsTotal - orderTotal > 0}
+            />
+          </Flex>
+
+          {alert.message && (
+            <Alert status={alert.type} mt="4">
+              <AlertIcon />
+              {alert.message}
+            </Alert>
+          )}
+          <Tabs isFitted variant="enclosed">
+            <TabList mb="1em" bg={"white"}>
+              <Tab
+                _selected={{
+                  bg: "blue.500",
+                  color: "white",
+                  borderColor: "blue.500",
+                }}
+                _hover={{ bg: "blue.400" }}
+                fontWeight="semibold"
               >
                 Orders
-              </Text>
-              <Button colorScheme="blue" onClick={handleAddTransaction}>
-                Add Order
-              </Button>
-            </Flex>
-
-            <ColumnsTable
-              columnsData={columnsDataTransactions}
-              tableData={customer.transactions ?? []}
-              handleClick={handleViewTransaction}
-              handleDelClick={handleDelClick}
-            />
-          </TabPanel>
-          <TabPanel>
-            {/* Transactions Content */}
-            <Flex
-              px="25px"
-              py={"16px"}
-              borderRadius={"16px"}
-              justify="space-between"
-              mb="20px"
-              align="center"
-              bg={"white"}
-            >
-              <Text
-                color={textColor}
-                fontSize="2rem"
-                fontWeight="700"
-                lineHeight="100%"
+              </Tab>
+              <Tab
+                _selected={{
+                  bg: "blue.500",
+                  color: "white",
+                  borderColor: "blue.500",
+                }}
+                _hover={{ bg: "blue.400" }}
+                fontWeight="semibold"
               >
                 Transactions
-              </Text>
-              <Button colorScheme="blue" onClick={handleAddPayment}>
-                Add Transaction
-              </Button>
-            </Flex>
-            <ColumnsTablePayments
-              columnsData={columnsDataPayments}
-              tableData={customer.payments ?? []}
-              handleDelClick={handlePayDelClick}
-            />
-          </TabPanel>
-          <TabPanel>
-            {/* Orders Content */}
-            <Flex
-              px="25px"
-              py={"16px"}
-              borderRadius={"16px"}
-              justify="space-between"
-              mb="20px"
-              align="center"
-              bg={"white"}
-            >
-              <Text
-                color={textColor}
-                fontSize="2rem"
-                fontWeight="700"
-                lineHeight="100%"
+              </Tab>
+              <Tab
+                _selected={{
+                  bg: "blue.500",
+                  color: "white",
+                  borderColor: "blue.500",
+                }}
+                _hover={{ bg: "blue.400" }}
+                fontWeight="semibold"
               >
                 Ledger
-              </Text>
-              <Flex                
-                
-                justify="end"
-                me="20px"
-                align="center"
-                bg={"white"}
-                gap={'8px'}
-              >
+              </Tab>
+            </TabList>
 
-              <Button colorScheme="blue" onClick={handlePrint}>
-                {isLoading ? (
-                  <Spinner
-                    thickness="4px"
-                    speed="1s"
-                    emptyColor="gray.200"
-                    color="blue.500"
-                    size="lg"
-                  />
-                ) : (
-                  "Generate Ledger"
-                )}
-              </Button>
-              <Button colorScheme="green" onClick={whatsappLedger}>
-                {isLoading2 ? (
-                  <Spinner
-                    thickness="4px"
-                    speed="1s"
-                    emptyColor="gray.200"
-                    color="green.500"
-                    size="lg"
-                  />
-                ) : (
-                  <em className="bi bi-whatsapp"></em>
-                )}
-              </Button>
-              </Flex>
-            </Flex>
+            <TabPanels>
+              <TabPanel>
+                <Flex
+                  px="25px"
+                  py={"16px"}
+                  borderRadius={"16px"}
+                  justify="space-between"
+                  mb="20px"
+                  align="center"
+                  bg={"white"}
+                >
+                  <Text
+                    color={textColor}
+                    fontSize="2rem"
+                    fontWeight="700"
+                    lineHeight="100%"
+                  >
+                    Orders
+                  </Text>
+                  <Button colorScheme="blue" onClick={handleAddTransaction}>
+                    Add Order
+                  </Button>
+                </Flex>
 
-            <ColumnsTableLedger
-              columnsData={columnsDataLedger}
-              tableData={customer.ledger ?? []}
-            />
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
-      
+                <ColumnsTable
+                  columnsData={columnsDataTransactions}
+                  tableData={customer.transactions ?? []}
+                  handleClick={handleViewTransaction}
+                  handleDelClick={handleDelClick}
+                />
+              </TabPanel>
+              <TabPanel>
+                <Flex
+                  px="25px"
+                  py={"16px"}
+                  borderRadius={"16px"}
+                  justify="space-between"
+                  mb="20px"
+                  align="center"
+                  bg={"white"}
+                >
+                  <Text
+                    color={textColor}
+                    fontSize="2rem"
+                    fontWeight="700"
+                    lineHeight="100%"
+                  >
+                    Transactions
+                  </Text>
+                  <Button colorScheme="blue" onClick={handleAddPayment}>
+                    Add Transaction
+                  </Button>
+                </Flex>
+                <ColumnsTablePayments
+                  columnsData={columnsDataPayments}
+                  tableData={customer.payments ?? []}
+                  handleDelClick={handlePayDelClick}
+                />
+              </TabPanel>
+              <TabPanel>
+                <Flex
+                  px="25px"
+                  py={"16px"}
+                  borderRadius={"16px"}
+                  justify="space-between"
+                  mb="20px"
+                  align="center"
+                  bg={"white"}
+                >
+                  <Text
+                    color={textColor}
+                    fontSize="2rem"
+                    fontWeight="700"
+                    lineHeight="100%"
+                  >
+                    Ledger
+                  </Text>
+                  <Flex justify="end" me="20px" align="center" bg={"white"} gap={"8px"}>
+                    <Button colorScheme="blue" onClick={handlePrint}>
+                      {isLoading ? (
+                        <Spinner
+                          thickness="4px"
+                          speed="1s"
+                          emptyColor="gray.200"
+                          color="blue.500"
+                          size="lg"
+                        />
+                      ) : (
+                        "Generate Ledger"
+                      )}
+                    </Button>
+                    <Button colorScheme="green" onClick={whatsappLedger}>
+                      {isLoading2 ? (
+                        <Spinner
+                          thickness="4px"
+                          speed="1s"
+                          emptyColor="gray.200"
+                          color="green.500"
+                          size="lg"
+                        />
+                      ) : (
+                        <em className="bi bi-whatsapp"></em>
+                      )}
+                    </Button>
+                  </Flex>
+                </Flex>
 
-      <AlertDialog
-        isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Confirm Deletion
-            </AlertDialogHeader>
-            <AlertDialogBody>
-              Are you sure you want to delete this order #{ordId}?
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
-                Cancel
-              </Button>
-              <Button colorScheme="red" onClick={handleDeleteConfirmed} ml={3}>
-                Delete
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+                <ColumnsTableLedger
+                  columnsData={columnsDataLedger}
+                  tableData={customer.ledger ?? []}
+                />
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
 
-      {/* /pymt  */}
+          <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
+            <AlertDialogOverlay>
+              <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                  Confirm Deletion
+                </AlertDialogHeader>
+                <AlertDialogBody>
+                  Are you sure you want to delete this order #{ordId}?
+                </AlertDialogBody>
+                <AlertDialogFooter>
+                  <Button ref={cancelRef} onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button colorScheme="red" onClick={handleDeleteConfirmed} ml={3}>
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
 
-      <AlertDialog
-        isOpen={isPyOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onPyClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Confirm Deletion
-            </AlertDialogHeader>
-            <AlertDialogBody>
-              Are you sure you want to delete this Transaction #{pyId}?
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onPyClose}>
-                Cancel
-              </Button>
-              <Button
-                colorScheme="red"
-                onClick={handlePyDeleteConfirmed}
-                ml={3}
-              >
-                Delete
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-    </Box>
+          <AlertDialog
+            isOpen={isPyOpen}
+            leastDestructiveRef={cancelRef}
+            onClose={onPyClose}
+          >
+            <AlertDialogOverlay>
+              <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                  Confirm Deletion
+                </AlertDialogHeader>
+                <AlertDialogBody>
+                  Are you sure you want to delete this Transaction #{pyId}?
+                </AlertDialogBody>
+                <AlertDialogFooter>
+                  <Button ref={cancelRef} onClick={onPyClose}>
+                    Cancel
+                  </Button>
+                  <Button
+                    colorScheme="red"
+                    onClick={handlePyDeleteConfirmed}
+                    ml={3}
+                  >
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
+        </Box>
+    </>
   );
 }

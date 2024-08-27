@@ -35,6 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
+  CircularProgress,
 } from "@chakra-ui/react";
 import DevelopmentTable from "views/admin/dataTables/components/DevelopmentTable";
 import CheckTable from "views/admin/dataTables/components/CheckTable";
@@ -63,46 +64,42 @@ import axios, * as others from 'axios';
 
 import Error from "../default/components/Error";
 
-
 export default function Settings() {
-  // console.log(tableDataColumns);
   const history = useHistory();
-  const [customerData, setCustomerData] = useState([])
-
+  const [customerData, setCustomerData] = useState([]);
   const [alert, setAlert] = useState({ message: "", type: "" });
-
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    getCustomers().then(()=>{console.log('');})
-  },[])
+    setLoading(true);
+    getCustomers()
+      .then(() => {
+        console.log('');
+        setLoading(false);
+      })
+      .catch(err => {
+        setLoading(false);
+        alert('Something Went wrong');
+      });
+  }, []);
 
   const handleRetry = () => {
-    // Retry logic, you can make an API call or perform any necessary action here
     getCustomers();
   };
 
   async function getCustomers() {
-    // const axios = require('axios');
-    // setIsSubmitting(true);
-
     try {
-        const response = await axios.get('http://localhost:5000/api/getRequiredDataCustomers');
-        // console.log(response.data);
-        const d = response.data
-        console.log(d);
-        setCustomerData(d)
-        setError(null)
-        
-        // setIsSubmitting(false);
+      const response = await axios.get('http://localhost:5000/api/getRequiredDataCustomers');
+      const d = response.data;
+      console.log(d);
+      setCustomerData(d);
+      setError(null);
     } catch (error) {
-        console.error('Error adding customer:', error);
-        setError('Oops! Something went wrong. Please try again later.');
-        // setIsSubmitting(false);
+      console.error('Error adding customer:', error);
+      setError('Oops! Something went wrong. Please try again later.');
     }
-}
-
-
+  }
 
   const handleAddCustomer = () => {
     history.push({
@@ -111,28 +108,14 @@ export default function Settings() {
   };
 
   const textColor = useColorModeValue("secondaryGray.900", "white");
-  // console.log("HERE",history);
-  const handleViewButtonClick = (data) => {
-    // Navigate to the profile route with props
-    const custId = data.id;
-    // console.log(CustomerDetailData);
 
+  const handleViewButtonClick = (data) => {
+    const custId = data.id;
     history.push({
       pathname: `/admin/customers/profile/${custId}`,
       state: { id: custId },
     });
   };
-
-  // async function deleteCustomer(id){
-  //   try{
-
-  //   }
-  //   catch{
-
-  //   }
-  // }
-
-  
 
   const [isOpen, setIsOpen] = useState(false);
   const [custId, setCustId] = useState(-1);
@@ -140,140 +123,123 @@ export default function Settings() {
   const cancelRef = React.useRef();
 
   async function deleteCustomer(id) {
-    // const axios = require('axios');
-    // setIsSubmitting(true);
-
     try {
-        const response = await axios.delete(`http://localhost:5000/api/deleteCustomer/${id}`);
-        // console.log(response.data);
-        setAlert({ message: "Customer deleted successfully!", type: "success" }); // Setting success message
-        const  timer = setTimeout(() => {setAlert({});}, 2500); // Clearing alert after
-        
-
-        
-        // setIsSubmitting(false);
+      const response = await axios.delete(`http://localhost:5000/api/deleteCustomer/${id}`);
+      setAlert({ message: "Customer deleted successfully!", type: "success" });
+      setTimeout(() => {
+        setAlert({});
+      }, 2500);
     } catch (error) {
-        setError('Oops! Something went wrong. Please try again later.');
-        // setIsSubmitting(false);
-        setAlert({ message: error.message, type: "error" }); // Setting success message
-        const  timer = setTimeout(() => {setAlert({});}, 3000); // Clearing alert after
+      setError('Oops! Something went wrong. Please try again later.');
+      setAlert({ message: error.message, type: "error" });
+      setTimeout(() => {
+        setAlert({});
+      }, 3000);
     }
-}
+  }
 
-
-  const handleDelClick = (data) =>{
+  const handleDelClick = (data) => {
     setCustId(data.id);
     setIsOpen(true);
   }
 
-
-  const handleEditClick = (data)=>{
+  const handleEditClick = (data) => {
     const custId = data.id;
-
     history.push({
       pathname: `/admin/customers/edit/${custId}`,
       state: { id: custId },
     });
-
-
   }
 
   const handleDeleteConfirmed = () => {
-    console.log(custId);
-    // Perform deletion logic here
-    deleteCustomer(custId).then(()=>{
+    deleteCustomer(custId).then(() => {
       console.log("customer deleted!");
-      getCustomers().then(()=>{console.log('');})
-    })
-    setCustId(-1)
-    onClose(); // Close the confirmation dialog
+      getCustomers().then(() => { console.log(''); })
+    });
+    setCustId(-1);
+    onClose();
   };
 
-
-  // Chakra Color Mode
   return (
     <>
-    {
-      error ? (
-        <Error errorMessage={error} onRetry={handleRetry} />
-      ):(
-        <>
-        <Box>
-      {/* <SimpleGrid
-        mb='20px'
-        columns={{ sm: 1, md: 2 }}
-        spacing={{ base: "20px", xl: "20px" }}>
-        <DevelopmentTable
-          columnsData={columnsDataDevelopment}
-          tableData={tableDataDevelopment}
-        />
-        <CheckTable columnsData={columnsDataCheck} tableData={tableDataCheck} />
-        
-        <ComplexTable
-          columnsData={columnsDataComplex}
-          tableData={tableDataComplex}
-        />
-      </SimpleGrid> */}
-      <Flex px="25px" py={'16px'} borderRadius={'16px'} justify="space-between" mb="20px" align="center" bg={'white'}>
-        <Text
-          color={textColor}
-          fontSize="2rem"
-          fontWeight="700"
-          lineHeight="100%"
+      {loading ? (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          width="100vw"
+          height="100vh"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          bg="rgba(255, 255, 255, 0.8)"
+          zIndex="9999"
         >
-          Customers
-        </Text>
-        <Button colorScheme="blue" onClick={handleAddCustomer}>
-          Add Customers
-        </Button>
-      </Flex>
-      <ColumnsTable
-        columnsData={columnsDataColumns}
-        tableData={customerData}
-        handleClick={handleViewButtonClick}
-        handleDelClick={handleDelClick}
-        handleEditClick={handleEditClick}
-      />
-      {alert.message && (
-        <Alert status={alert.type} mt="4">
-          <AlertIcon />
-          {alert.message}
-        </Alert>
+          <CircularProgress isIndeterminate color="blue.500" />
+        </Box>
+      ) : (
+        <>
+          {error ? (
+            <Error errorMessage={error} onRetry={handleRetry} />
+          ) : (
+            <>
+              <Box>
+                <Flex px="25px" py={'16px'} borderRadius={'16px'} justify="space-between" mb="20px" align="center" bg={'white'}>
+                  <Text
+                    color={textColor}
+                    fontSize="2rem"
+                    fontWeight="700"
+                    lineHeight="100%"
+                  >
+                    Customers
+                  </Text>
+                  <Button colorScheme="blue" onClick={handleAddCustomer}>
+                    Add Customers
+                  </Button>
+                </Flex>
+                <ColumnsTable
+                  columnsData={columnsDataColumns}
+                  tableData={customerData}
+                  handleClick={handleViewButtonClick}
+                  handleDelClick={handleDelClick}
+                  handleEditClick={handleEditClick}
+                />
+                {alert.message && (
+                  <Alert status={alert.type} mt="4">
+                    <AlertIcon />
+                    {alert.message}
+                  </Alert>
+                )}
+              </Box>
+
+              <AlertDialog
+                isOpen={isOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={onClose}
+              >
+                <AlertDialogOverlay>
+                  <AlertDialogContent>
+                    <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                      Confirm Deletion
+                    </AlertDialogHeader>
+                    <AlertDialogBody>
+                      Are you sure you want to delete this customer?
+                    </AlertDialogBody>
+                    <AlertDialogFooter>
+                      <Button ref={cancelRef} onClick={onClose}>
+                        Cancel
+                      </Button>
+                      <Button colorScheme="red" onClick={handleDeleteConfirmed} ml={3}>
+                        Delete
+                      </Button>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialogOverlay>
+              </AlertDialog>
+            </>
+          )}
+        </>
       )}
-    </Box>
-
-
-    <AlertDialog
-        isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Confirm Deletion
-            </AlertDialogHeader>
-            <AlertDialogBody>
-              Are you sure you want to delete this customer?
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
-                Cancel
-              </Button>
-              <Button colorScheme="red" onClick={handleDeleteConfirmed} ml={3}>
-                Delete
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-</>
-    
-      )
-    }
-
-
     </>
-    
   );
 }
